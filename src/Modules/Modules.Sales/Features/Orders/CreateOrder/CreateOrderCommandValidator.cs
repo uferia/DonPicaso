@@ -6,6 +6,10 @@ public sealed class CreateOrderCommandValidator : AbstractValidator<CreateOrderC
 {
     public CreateOrderCommandValidator()
     {
+        RuleFor(c => c.ClientOrderId)
+            .NotEmpty()
+            .WithMessage("ClientOrderId is required (device-generated idempotency key).");
+
         RuleFor(c => c.BranchId)
             .NotEmpty()
             .WithMessage("BranchId is required.");

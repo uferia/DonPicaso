@@ -12,11 +12,20 @@ export interface OrderItemPayload {
 }
 
 export interface CreateOrderPayload {
+  /**
+   * Device-generated idempotency key (UUID). Assigned once when the order is
+   * placed and reused verbatim on every replay, so the backend can detect an
+   * order it already received even if the original response was lost.
+   */
+  clientOrderId: string;
   branchId: string;
   brandId: string;
   totalAmount: number;
   items: OrderItemPayload[];
 }
+
+/** What the UI hands to OrderSyncService; the sync layer assigns the key. */
+export type NewOrder = Omit<CreateOrderPayload, 'clientOrderId'>;
 
 /** An order captured while offline, awaiting replay to the backend. */
 export interface PendingOrder {

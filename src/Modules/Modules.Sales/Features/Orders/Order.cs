@@ -10,6 +10,12 @@ public sealed class Order
 
     public Guid Id { get; private set; }
 
+    /// <summary>
+    /// Device-generated idempotency key; unique across all orders so offline
+    /// replays of an already-received order are detected instead of duplicated.
+    /// </summary>
+    public Guid ClientOrderId { get; private set; }
+
     public Guid BranchId { get; private set; }
 
     public Guid BrandId { get; private set; }
@@ -26,6 +32,7 @@ public sealed class Order
     }
 
     public static Order Create(
+        Guid clientOrderId,
         Guid branchId,
         Guid brandId,
         decimal totalAmount,
@@ -35,6 +42,7 @@ public sealed class Order
         var order = new Order
         {
             Id = Guid.NewGuid(),
+            ClientOrderId = clientOrderId,
             BranchId = branchId,
             BrandId = brandId,
             TotalAmount = totalAmount,

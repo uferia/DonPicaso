@@ -10,3 +10,4 @@ C:\Projects\DonPicaso\src\Modules\Modules.Sales\obj\Debug\net10.0\Modules.Sales.
 C:\Projects\DonPicaso\src\Modules\Modules.Sales\obj\Debug\net10.0\refint\Modules.Sales.dll
 C:\Projects\DonPicaso\src\Modules\Modules.Sales\obj\Debug\net10.0\Modules.Sales.pdb
 C:\Projects\DonPicaso\src\Modules\Modules.Sales\obj\Debug\net10.0\ref\Modules.Sales.dll
+C:\Projects\DonPicaso\src\Modules\Modules.Sales\obj\Debug\net10.0\Modules.Sales.sourcelink.json

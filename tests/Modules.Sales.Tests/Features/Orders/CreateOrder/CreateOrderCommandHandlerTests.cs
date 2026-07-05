@@ -44,14 +44,16 @@ public sealed class CreateOrderCommandHandlerTests
     {
         var command = BuildValidCommand();
 
-        var orderId = await _handler.HandleAsync(command, CancellationToken.None);
+        var result = await _handler.HandleAsync(command, CancellationToken.None);
 
-        orderId.Should().NotBeEmpty();
+        result.OrderId.Should().NotBeEmpty();
+        result.WasAlreadyProcessed.Should().BeFalse();
 
         var savedOrder = await _dbContext.Orders
             .Include(o => o.Items)
-            .SingleAsync(o => o.Id == orderId);
+            .SingleAsync(o => o.Id == result.OrderId);
 
+        savedOrder.ClientOrderId.Should().Be(command.ClientOrderId);
         savedOrder.BranchId.Should().Be(command.BranchId);
         savedOrder.BrandId.Should().Be(command.BrandId);
         savedOrder.TotalAmount.Should().Be(35.00m);
@@ -60,6 +62,21 @@ public sealed class CreateOrderCommandHandlerTests
         savedOrder.Items.Sum(i => i.LineTotal).Should().Be(savedOrder.TotalAmount);
 
         _timeProviderMock.Verify(t => t.GetUtcNow(), Times.Once);
+    }
+
+    [TestMethod]
+    public async Task HandleAsync_WhenSameClientOrderIdIsReplayed_ReturnsOriginalIdWithoutDuplicating()
+    {
+        var command = BuildValidCommand();
+
+        var first = await _handler.HandleAsync(command, CancellationToken.None);
+        var replay = await _handler.HandleAsync(command, CancellationToken.None);
+
+        replay.OrderId.Should().Be(first.OrderId);
+        replay.WasAlreadyProcessed.Should().BeTrue();
+        first.WasAlreadyProcessed.Should().BeFalse();
+
+        (await _dbContext.Orders.CountAsync()).Should().Be(1);
     }
 
     [TestMethod]
@@ -79,6 +96,7 @@ public sealed class CreateOrderCommandHandlerTests
     public async Task HandleAsync_WithEmptyBranchAndNonPositiveQuantity_ThrowsValidationException()
     {
         var command = new CreateOrderCommand(
+            ClientOrderId: Guid.NewGuid(),
             BranchId: Guid.Empty,
             BrandId: Guid.NewGuid(),
             TotalAmount: 10.00m,
@@ -98,6 +116,7 @@ public sealed class CreateOrderCommandHandlerTests
 
     private static CreateOrderCommand BuildValidCommand() =>
         new(
+            ClientOrderId: Guid.NewGuid(),
             BranchId: Guid.NewGuid(),
             BrandId: Guid.NewGuid(),
             TotalAmount: 35.00m,

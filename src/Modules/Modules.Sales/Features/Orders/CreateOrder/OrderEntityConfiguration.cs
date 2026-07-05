@@ -14,11 +14,15 @@ internal sealed class OrderEntityConfiguration : IEntityTypeConfiguration<Order>
     {
         builder.ToTable("orders");
 
-        builder.HasKey(o => o.Id);
+        builder.HasKey(o => o.Id).HasName("pk_orders");
 
         builder.Property(o => o.Id)
             .HasColumnName("id")
             .ValueGeneratedNever();
+
+        builder.Property(o => o.ClientOrderId)
+            .HasColumnName("client_order_id")
+            .IsRequired();
 
         builder.Property(o => o.BranchId)
             .HasColumnName("branch_id")
@@ -41,10 +45,15 @@ internal sealed class OrderEntityConfiguration : IEntityTypeConfiguration<Order>
         builder.HasMany(o => o.Items)
             .WithOne()
             .HasForeignKey(i => i.OrderId)
+            .HasConstraintName("fk_order_items_order_id")
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.Navigation(o => o.Items)
             .UsePropertyAccessMode(PropertyAccessMode.Field);
+
+        builder.HasIndex(o => o.ClientOrderId)
+            .IsUnique()
+            .HasDatabaseName("ux_orders_client_order_id");
 
         builder.HasIndex(o => o.BranchId).HasDatabaseName("ix_orders_branch_id");
         builder.HasIndex(o => o.BrandId).HasDatabaseName("ix_orders_brand_id");
@@ -57,7 +66,7 @@ internal sealed class OrderItemEntityConfiguration : IEntityTypeConfiguration<Or
     {
         builder.ToTable("order_items");
 
-        builder.HasKey(i => i.Id);
+        builder.HasKey(i => i.Id).HasName("pk_order_items");
 
         builder.Property(i => i.Id)
             .HasColumnName("id")

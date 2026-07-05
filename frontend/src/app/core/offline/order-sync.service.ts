@@ -4,6 +4,7 @@ import { firstValueFrom } from 'rxjs';
 
 import {
   CreateOrderPayload,
+  NewOrder,
   OfflineOrderDb,
   offlineOrderDb,
 } from './offline-order-db';
@@ -69,8 +70,17 @@ export class OrderSyncService {
   /**
    * Entry point used by the ordering UI. Never rejects because of
    * connectivity: a network-level failure downgrades to an offline queue.
+   *
+   * The idempotency key is minted here — before any network attempt — so the
+   * exact same key is reused whether the order goes straight through, falls
+   * back to the queue, or is replayed later.
    */
-  async placeOrder(payload: CreateOrderPayload): Promise<OrderPlacementResult> {
+  async placeOrder(order: NewOrder): Promise<OrderPlacementResult> {
+    const payload: CreateOrderPayload = {
+      clientOrderId: crypto.randomUUID(),
+      ...order,
+    };
+
     if (!this.isOnline()) {
       await this.queueLocally(payload);
       return { status: 'queued-offline' };

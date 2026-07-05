@@ -21,12 +21,19 @@ public static class CreateOrderEndpoint
                     return Results.ValidationProblem(validation.ToDictionary());
                 }
 
-                var orderId = await handler.HandleAsync(command, cancellationToken);
-                return Results.Created($"/api/v1/orders/{orderId}", new CreateOrderResponse(orderId));
+                var result = await handler.HandleAsync(command, cancellationToken);
+                var response = new CreateOrderResponse(result.OrderId);
+
+                // A replayed order returns 200 with the original id so the
+                // sync client treats it as success and clears its local copy.
+                return result.WasAlreadyProcessed
+                    ? Results.Ok(response)
+                    : Results.Created($"/api/v1/orders/{result.OrderId}", response);
             })
             .WithName("CreateOrder")
             .WithTags("Orders")
             .Produces<CreateOrderResponse>(StatusCodes.Status201Created)
+            .Produces<CreateOrderResponse>(StatusCodes.Status200OK)
             .ProducesValidationProblem();
 
         return app;

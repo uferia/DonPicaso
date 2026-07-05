@@ -283,3 +283,4 @@ C:\Projects\DonPicaso\tests\Modules.Sales.Tests\obj\Debug\net10.0\refint\Modules
 C:\Projects\DonPicaso\tests\Modules.Sales.Tests\obj\Debug\net10.0\Modules.Sales.Tests.pdb
 C:\Projects\DonPicaso\tests\Modules.Sales.Tests\obj\Debug\net10.0\Modules.Sales.Tests.genruntimeconfig.cache
 C:\Projects\DonPicaso\tests\Modules.Sales.Tests\obj\Debug\net10.0\ref\Modules.Sales.Tests.dll
+C:\Projects\DonPicaso\tests\Modules.Sales.Tests\obj\Debug\net10.0\Modules.Sales.Tests.sourcelink.json
