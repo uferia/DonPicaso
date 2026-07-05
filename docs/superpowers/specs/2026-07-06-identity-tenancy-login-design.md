@@ -9,7 +9,7 @@ locations, and corporate oversees the whole brand. This is the first of
 three planned sub-projects (Identity/Login → Menu → Admin Dashboard) that
 together wire the UI up to the API. Franchise/multi-tenancy is treated as
 foundational here rather than a later bolt-on, since retrofitting tenant
-scoping onto Users/Restaurants/Menu after the fact would be far more
+scoping onto Users/Branches/Menu after the fact would be far more
 disruptive than deciding it up front.
 
 ## Current State (verified)
@@ -21,6 +21,13 @@ disruptive than deciding it up front.
   `AddSalesModule()` / `MapSalesModule()` composition-root pair called
   from `Program.cs`. There is no identity/auth of any kind today — the
   `CreateOrder` endpoint is unauthenticated.
+- The existing `Order` entity (`Features/Orders/Order.cs`) already has
+  `BrandId` and `BranchId` fields — raw, unvalidated GUIDs with no real
+  tenancy module behind them yet. The new Identity module's entities are
+  named to match this existing vocabulary exactly (`Brand`, `Branch`)
+  rather than introducing a second set of terms (`Franchise`,
+  `Restaurant`) for the same concepts — found and corrected during
+  plan-writing, confirmed with the user.
 - CORS is already configured in `Program.cs` for `http://localhost:4200`
   (Angular dev) plus Capacitor/Ionic origins, anticipating a future
   mobile-packaged POS app.
@@ -32,18 +39,18 @@ disruptive than deciding it up front.
 
 ## Tenancy & Role Model (decided)
 
-- **Hierarchy**: Corporate (Don Picaso) → Franchise → Restaurant
-  (physical location). A franchise can own multiple restaurant locations.
-  Corporate defines brand/menu standards; franchises operate
+- **Hierarchy**: Corporate (Don Picaso) → Brand (a franchise) → Branch
+  (physical restaurant location). A brand can own multiple branches.
+  Corporate defines brand/menu standards; brands operate
   semi-independently day to day but roll up to corporate.
-- **Roles** (4-tier): `Corporate`, `FranchiseOwner`, `LocationManager`,
+- **Roles** (4-tier): `Corporate`, `BrandOwner`, `BranchManager`,
   `Staff`. Each tier manages the tier directly below it within its own
   branch of the hierarchy. `Corporate` is the exception: it can act at
-  any level (create/edit franchises, restaurants, managers, or staff
+  any level (create/edit brands, branches, managers, or staff
   directly), per explicit decision — not just the top of a strict
   top-down chain.
-- Full CRUD/provisioning UI for this hierarchy (creating franchises,
-  restaurants, users) is **out of scope for this sub-project** — it's
+- Full CRUD/provisioning UI for this hierarchy (creating brands,
+  branches, users) is **out of scope for this sub-project** — it's
   the subject of the later Admin Dashboard sub-project. This sub-project
   ships the schema, auth mechanics, and login UI only, using seed data
   to make the login flow independently testable.
@@ -51,11 +58,11 @@ disruptive than deciding it up front.
 ## Scope
 
 In scope:
-1. New `Modules.Identity` backend module: `Franchise`, `Restaurant`,
+1. New `Modules.Identity` backend module: `Brand`, `Branch`,
    `User`, `RefreshToken` entities and an initial EF Core migration
    (Postgres schema `identity`), seeded with one account per role.
 2. JWT-based authentication: email+password login for admin-tier roles,
-   PIN-based login for staff/location-manager on shared POS tablets.
+   PIN-based login for staff/branch-manager on shared POS tablets.
 3. Role-hierarchy + tenancy-scope authorization policies, enforced via a
    custom `AuthorizationHandler`.
 4. Angular: login screens (`/login`, `/staff-login` + device setup),
@@ -64,9 +71,12 @@ In scope:
    handler, and the frontend auth service/interceptor/guards.
 
 Out of scope (explicitly deferred):
-- Admin dashboard UI for provisioning franchises/restaurants/users
+- Admin dashboard UI for provisioning brands/branches/users
   (next sub-project) — this phase relies on seed data instead.
 - Menu domain and POS order-building UI (the sub-project after that).
+- Wiring `Order.BrandId`/`Order.BranchId` up to real foreign keys
+  against the new `Brand`/`Branch` tables — that's Sales-module work for
+  a later phase; this phase only establishes the Identity-side tables.
 - PIN brute-force lockout / rate limiting (flagged as a known gap;
   acceptable for an internal staff tool on day one, should be revisited
   before this is customer-facing or handles payment data).
@@ -83,7 +93,7 @@ Out of scope (explicitly deferred):
 - FluentValidation validators for login/staff-login commands.
 - Minimal-API endpoints per feature (`LoginEndpoint`,
   `StaffLoginEndpoint`, `RefreshTokenEndpoint`, `LogoutEndpoint`,
-  `StaffListEndpoint` for a restaurant's staff roster).
+  `StaffListEndpoint` for a branch's staff roster).
 - `AddIdentityModule(connectionString, jwtOptions)` /
   `MapIdentityModule()` composition-root pair, called from `Program.cs`
   alongside `AddSalesModule` / `MapSalesModule`.
@@ -92,43 +102,43 @@ Out of scope (explicitly deferred):
 
 ### 2. Data model (schema `identity`)
 
-- **Franchise**: `Id` (Guid), `Name`, `CreatedAt`.
-- **Restaurant**: `Id` (Guid), `FranchiseId` (FK), `Name`, `CreatedAt`.
-  Always belongs to exactly one franchise.
+- **Brand**: `Id` (Guid), `Name`, `CreatedAt`.
+- **Branch**: `Id` (Guid), `BrandId` (FK), `Name`, `CreatedAt`.
+  Always belongs to exactly one brand.
 - **User**: `Id` (Guid), `Email` (nullable — set for admin-tier
   accounts), `PasswordHash` (nullable), `DisplayName`, `PinHash`
-  (nullable — set for Staff/LocationManager accounts), `Role` (enum:
-  `Corporate`, `FranchiseOwner`, `LocationManager`, `Staff`),
-  `FranchiseId` (nullable FK), `RestaurantId` (nullable FK),
+  (nullable — set for Staff/BranchManager accounts), `Role` (enum:
+  `Corporate`, `BrandOwner`, `BranchManager`, `Staff`),
+  `BrandId` (nullable FK), `BranchId` (nullable FK),
   `CreatedAt`.
   - Scoping rule, enforced in command handlers (not DB constraints):
-    `Corporate` → no scope. `FranchiseOwner` → `FranchiseId` required,
-    `RestaurantId` null. `LocationManager` / `Staff` → both required,
-    and `Restaurant.FranchiseId` must match `User.FranchiseId`.
+    `Corporate` → no scope. `BrandOwner` → `BrandId` required,
+    `BranchId` null. `BranchManager` / `Staff` → both required,
+    and `Branch.BrandId` must match `User.BrandId`.
 - **RefreshToken**: `Id`, `UserId` (FK), `TokenHash`, `ExpiresAt`,
   `RevokedAt` (nullable).
 
-A migration seeds one Franchise, one Restaurant, and one user per role
+A migration seeds one Brand, one Branch, and one user per role
 (including a known PIN for the seeded Staff account) so the full login
 flow is exercisable without any provisioning UI.
 
 ### 3. Auth flows
 
-**Admin login** (`Corporate`, `FranchiseOwner`, `LocationManager`):
+**Admin login** (`Corporate`, `BrandOwner`, `BranchManager`):
 `POST /api/v1/auth/login { email, password }`. Validates against
 `PasswordHash`. On success, issues a short-lived JWT access token
-(~15 min; claims: `sub`, `role`, `franchiseId`, `restaurantId`) plus a
+(~15 min; claims: `sub`, `role`, `brandId`, `branchId`) plus a
 refresh token (~7 days, stored hashed in `RefreshToken`).
 `POST /api/v1/auth/refresh { refreshToken }` exchanges a valid, unexpired,
 unrevoked refresh token for a new access token.
 
 **Staff PIN login**: the POS tablet is configured once with a
-`restaurantId` (a one-time local "set up this device" step, persisted
+`branchId` (a one-time local "set up this device" step, persisted
 on-device). The staff login screen calls
-`GET /api/v1/auth/staff/{restaurantId}/users` to list Staff/
-LocationManager accounts at that location (id + display name only, no
+`GET /api/v1/auth/staff/{branchId}/users` to list Staff/
+BranchManager accounts at that branch (id + display name only, no
 credentials). Staff taps their name, enters a 4-digit PIN, and
-`POST /api/v1/auth/staff-login { restaurantId, userId, pin }` validates
+`POST /api/v1/auth/staff-login { branchId, userId, pin }` validates
 against `PinHash` and issues the same token pair, with a longer access
 token lifetime (~12 hrs, since it's a shared all-day device).
 
@@ -138,12 +148,12 @@ server-side; Angular clears local session state.
 ### 4. Authorization
 
 A custom `AuthorizationHandler` enforces:
-- **Role hierarchy**: `Corporate` > `FranchiseOwner` > `LocationManager`
+- **Role hierarchy**: `Corporate` > `BrandOwner` > `BranchManager`
   > `Staff`. Policies express a minimum required role
-  (e.g. `RequireLocationManagerOrAbove`).
+  (e.g. `RequireBranchManagerOrAbove`).
 - **Tenancy scope**: for roles below `Corporate`, the handler compares
-  the resource's `franchiseId`/`restaurantId` against the caller's JWT
-  claims and denies access outside their own branch.
+  the resource's `brandId`/`branchId` against the caller's JWT
+  claims and denies access outside their own branch (org-tree sense).
   `Corporate` bypasses scope checks entirely (acts at any level, per
   the tenancy decision above).
 
@@ -157,8 +167,8 @@ A custom `AuthorizationHandler` enforces:
   route guards (`CanActivateFn`) checking the role claim.
 - `app.routes.ts` additions: `/login` (email+password),
   `/staff-login` (avatar-tap + PIN, including a first-run device-setup
-  step to capture `restaurantId`), `/admin/**` (guarded:
-  LocationManager and above), `/pos/**` (guarded: Staff and above).
+  step to capture `branchId`), `/admin/**` (guarded:
+  BranchManager and above), `/pos/**` (guarded: Staff and above).
 - `provideHttpClient(withInterceptors([authInterceptor]))` wired into
   `app.config.ts`.
 - Token storage: the access token is held only in memory (an
@@ -174,9 +184,9 @@ A custom `AuthorizationHandler` enforces:
   enumeration (don't reveal whether the email/user exists).
 - Expired or revoked refresh token → interceptor gives up after one
   failed refresh attempt and forces full re-login.
-- Staff login on a device with no configured `restaurantId` yet →
+- Staff login on a device with no configured `branchId` yet →
   redirected to the device-setup step first.
-- A restaurant with zero staff accounts → staff login screen shows an
+- A branch with zero staff accounts → staff login screen shows an
   empty state rather than erroring.
 - PIN brute-force: explicitly not handled in this pass (see Scope).
 
