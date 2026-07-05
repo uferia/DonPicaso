@@ -92,10 +92,13 @@ project exists around them. Rather than hand-rolling `package.json`/
 `angular.json`, scaffold a real Angular 21 standalone workspace and merge the
 existing files in:
 
-- Generate a fresh workspace (routing enabled, SCSS styling, Jest as the unit
-  test runner, standalone components — no NgModules) in a scratch directory,
-  since `ng new` requires an empty target and `frontend/src/app/core/offline/`
-  already has content.
+- Generate a fresh workspace (routing enabled, SCSS styling, Vitest as the
+  unit test runner, standalone components — no NgModules) in a scratch
+  directory, since `ng new` requires an empty target and
+  `frontend/src/app/core/offline/` already has content. (Correction from an
+  earlier draft: Angular CLI 21.1.0's `--test-runner` only supports `karma`
+  or `vitest` natively — there is no built-in Jest option. Vitest is the
+  fast/unbundled runner originally intended here.)
 - Merge the generated `package.json`, `angular.json`, `tsconfig*.json`,
   `src/main.ts`, `src/index.html`, `src/styles.scss`, and the generated
   `src/app/app.*` root component into `frontend/`, without overwriting
@@ -153,11 +156,20 @@ Manual smoke test, in order:
   few seconds resolves it. Not automated/retried — this is a one-time local
   setup step, not a repeated CI operation.
 
+## Addendum (found during plan-writing)
+
+The repo has no `.gitignore` anywhere, and `bin/`/`obj/` build artifacts are
+currently tracked in git — a plain `dotnet build` dirties tracked binary
+files. This must be fixed before scaffolding Angular, since `node_modules/`
+would otherwise be committed. Added as a first task: a root `.gitignore`
+covering .NET/Node/OS artifacts, plus `git rm -r --cached . && git add .` to
+untrack the already-committed build output (no working-tree files deleted).
+
 ## Testing
 
 No new automated tests are introduced by this change — it is environment
 wiring, not application logic. Existing tests
-(`tests/Modules.Sales.Tests`) are unaffected. The Jest test runner configured
+(`tests/Modules.Sales.Tests`) are unaffected. The Vitest test runner configured
 in the Angular scaffold will run the CLI's own generated default spec
 (root component) as a sanity check that the test toolchain works; no
 tests are written for `core/offline` in this pass since that code predates
