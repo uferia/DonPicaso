@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
+using Modules.Identity.Features.Auth;
 using Modules.Identity.Features.Branches;
 using Modules.Identity.Features.Brands;
+using Modules.Identity.Features.Users;
 
 namespace Modules.Identity.Persistence;
 
@@ -12,12 +14,13 @@ public sealed class IdentityDbContext(DbContextOptions<IdentityDbContext> option
 
     public DbSet<Branch> Branches => Set<Branch>();
 
+    public DbSet<User> Users => Set<User>();
+
+    public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasDefaultSchema(Schema);
-
-        // Picks up IEntityTypeConfiguration<T> implementations added by later
-        // tasks as each entity is introduced (feature-first, like Modules.Sales).
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(IdentityDbContext).Assembly);
     }
 }
