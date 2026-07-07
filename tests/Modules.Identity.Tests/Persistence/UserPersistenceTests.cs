@@ -31,7 +31,7 @@ public sealed class UserPersistenceTests
     {
         var brandId = Guid.NewGuid();
         var branchId = Guid.NewGuid();
-        var staff = User.CreateStaff("pin-hash", "Staff Member", UserRole.Staff, brandId, branchId, FixedUtcNow);
+        var staff = User.CreateStaff("pin-hash", "Staff Member", brandId, branchId, FixedUtcNow);
 
         _dbContext.Users.Add(staff);
         await _dbContext.SaveChangesAsync();
@@ -63,5 +63,15 @@ public sealed class UserPersistenceTests
 
         var reloaded = await _dbContext.RefreshTokens.SingleAsync(t => t.Id == token.Id);
         reloaded.RevokedAtUtc.Should().Be(FixedUtcNow.AddHours(1));
+    }
+
+    [TestMethod]
+    public void CreateAdmin_WithStaffRole_ThrowsArgumentException()
+    {
+        var act = () => User.CreateAdmin(
+            "someone@donpicaso.dev", "password-hash", "Someone",
+            UserRole.Staff, brandId: Guid.NewGuid(), branchId: Guid.NewGuid(), FixedUtcNow);
+
+        act.Should().Throw<ArgumentException>();
     }
 }

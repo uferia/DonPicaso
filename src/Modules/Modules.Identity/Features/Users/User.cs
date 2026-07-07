@@ -33,8 +33,14 @@ public sealed class User
         UserRole role,
         Guid? brandId,
         Guid? branchId,
-        DateTimeOffset createdAtUtc) =>
-        new()
+        DateTimeOffset createdAtUtc)
+    {
+        if (role == UserRole.Staff)
+        {
+            throw new ArgumentException("Staff accounts must be created via CreateStaff.", nameof(role));
+        }
+
+        return new()
         {
             Id = Guid.NewGuid(),
             Email = email,
@@ -45,12 +51,12 @@ public sealed class User
             BranchId = branchId,
             CreatedAtUtc = createdAtUtc,
         };
+    }
 
-    /// <summary>Staff — logs in with a 4-digit PIN on a branch-scoped POS tablet.</summary>
+    /// <summary>Staff — logs in with a 4-digit PIN on a branch-scoped POS tablet. Role is always Staff; there is no room for a caller to pass a mismatched role.</summary>
     public static User CreateStaff(
         string pinHash,
         string displayName,
-        UserRole role,
         Guid brandId,
         Guid branchId,
         DateTimeOffset createdAtUtc) =>
@@ -59,7 +65,7 @@ public sealed class User
             Id = Guid.NewGuid(),
             PinHash = pinHash,
             DisplayName = displayName,
-            Role = role,
+            Role = UserRole.Staff,
             BrandId = brandId,
             BranchId = branchId,
             CreatedAtUtc = createdAtUtc,
