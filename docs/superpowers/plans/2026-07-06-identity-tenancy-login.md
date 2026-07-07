@@ -926,6 +926,7 @@ git commit -m "Add User and RefreshToken entities to Modules.Identity"
 - Create: `src/Modules/Modules.Identity/Authorization/AuthorizationPolicies.cs`
 - Create: `src/Modules/Modules.Identity/Features/Auth/Me/MeEndpoint.cs`
 - Modify: `src/Modules/Modules.Identity/IdentityModule.cs` (JWT/authorization wiring, new `AddIdentityModule` signature)
+- Modify: `src/Modules/Modules.Identity/Modules.Identity.csproj` (add `Microsoft.AspNetCore.Authentication.JwtBearer` — `System.IdentityModel.Tokens.Jwt`/`Microsoft.IdentityModel.Tokens` ship as a separate NuGet package, not part of the `Microsoft.AspNetCore.App` shared framework, so this is required for the code below to compile)
 - Modify: `src/RestaurantEmpire.Api/Program.cs` (bind `Jwt` config, call `UseAuthentication`/`UseAuthorization`)
 - Modify: `src/RestaurantEmpire.Api/appsettings.json` (add `Jwt` section)
 - Test: `tests/Modules.Identity.Tests/Infrastructure/JwtTokenServiceTests.cs`
