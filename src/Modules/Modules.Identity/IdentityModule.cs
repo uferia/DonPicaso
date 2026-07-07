@@ -2,12 +2,15 @@ using System.Text;
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Modules.Identity.Authorization;
+using Modules.Identity.Features.Auth.Login;
 using Modules.Identity.Features.Auth.Me;
+using Modules.Identity.Features.Users;
 using Modules.Identity.Infrastructure;
 using Modules.Identity.Persistence;
 
@@ -21,6 +24,9 @@ public static class IdentityModule
         services.AddDbContext<IdentityDbContext>(options => options.UseNpgsql(connectionString));
 
         services.AddValidatorsFromAssembly(typeof(IdentityModule).Assembly, includeInternalTypes: true);
+
+        services.AddSingleton<IPasswordHasher<User>, PasswordHasher<User>>();
+        services.AddScoped<LoginCommandHandler>();
 
         services.AddSingleton(jwtOptions);
         services.AddSingleton<IJwtTokenService, JwtTokenService>();
@@ -53,6 +59,7 @@ public static class IdentityModule
 
     public static IEndpointRouteBuilder MapIdentityModule(this IEndpointRouteBuilder app)
     {
+        app.MapLogin();
         app.MapMe();
         return app;
     }
