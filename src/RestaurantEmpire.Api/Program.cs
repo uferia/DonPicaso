@@ -1,4 +1,5 @@
 using Modules.Identity;
+using Modules.Identity.Infrastructure;
 using Modules.Sales;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -20,15 +21,21 @@ builder.Services.AddSalesModule(
     builder.Configuration.GetConnectionString("SalesDb")
         ?? throw new InvalidOperationException("Connection string 'SalesDb' is not configured."));
 
+var jwtOptions = builder.Configuration.GetSection("Jwt").Get<JwtOptions>()
+    ?? throw new InvalidOperationException("'Jwt' configuration section is not configured.");
+
 builder.Services.AddIdentityModule(
     builder.Configuration.GetConnectionString("IdentityDb")
-        ?? throw new InvalidOperationException("Connection string 'IdentityDb' is not configured."));
+        ?? throw new InvalidOperationException("Connection string 'IdentityDb' is not configured."),
+    jwtOptions);
 
 var app = builder.Build();
 
 app.UseExceptionHandler();
 app.UseStatusCodePages();
 app.UseCors(PosCorsPolicy);
+app.UseAuthentication();
+app.UseAuthorization();
 
 if (app.Environment.IsDevelopment())
 {

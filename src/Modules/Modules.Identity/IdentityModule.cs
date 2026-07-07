@@ -1,25 +1,59 @@
+using System.Text;
+using FluentValidation;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.IdentityModel.Tokens;
+using Modules.Identity.Authorization;
+using Modules.Identity.Features.Auth.Me;
+using Modules.Identity.Infrastructure;
 using Modules.Identity.Persistence;
 
 namespace Modules.Identity;
 
-/// <summary>
-/// Composition root for the Identity module. The host (API bootstrap project)
-/// calls these two methods; everything else stays internal to the module.
-/// </summary>
 public static class IdentityModule
 {
-    public static IServiceCollection AddIdentityModule(this IServiceCollection services, string connectionString)
+    public static IServiceCollection AddIdentityModule(
+        this IServiceCollection services, string connectionString, JwtOptions jwtOptions)
     {
         services.AddDbContext<IdentityDbContext>(options => options.UseNpgsql(connectionString));
+
+        services.AddValidatorsFromAssembly(typeof(IdentityModule).Assembly, includeInternalTypes: true);
+
+        services.AddSingleton(jwtOptions);
+        services.AddSingleton<IJwtTokenService, JwtTokenService>();
+
+        services.AddSingleton<IAuthorizationHandler, RoleAuthorizationHandler>();
+
+        services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            .AddJwtBearer(options =>
+            {
+                // See Task 4's implementation note: without this, ASP.NET
+                // Core silently remaps "sub"/"role" to long WS-* claim URIs
+                // after validating the token.
+                options.MapInboundClaims = false;
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidIssuer = jwtOptions.Issuer,
+                    ValidateAudience = true,
+                    ValidAudience = jwtOptions.Audience,
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOptions.SigningKey)),
+                    ValidateLifetime = true,
+                };
+            });
+
+        services.AddAuthorization(options => options.AddIdentityPolicies());
 
         return services;
     }
 
     public static IEndpointRouteBuilder MapIdentityModule(this IEndpointRouteBuilder app)
     {
+        app.MapMe();
         return app;
     }
 }
