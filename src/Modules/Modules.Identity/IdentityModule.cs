@@ -9,6 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Modules.Identity.Authorization;
 using Modules.Identity.Features.Auth.Login;
+using Modules.Identity.Features.Auth.Logout;
 using Modules.Identity.Features.Auth.Me;
 using Modules.Identity.Features.Auth.Refresh;
 using Modules.Identity.Features.Auth.StaffLogin;
@@ -33,6 +34,7 @@ public static class IdentityModule
         services.AddScoped<StaffLoginCommandHandler>();
         services.AddScoped<GetStaffRosterQueryHandler>();
         services.AddScoped<RefreshCommandHandler>();
+        services.AddScoped<LogoutCommandHandler>();
 
         services.AddSingleton(jwtOptions);
         services.AddSingleton<IJwtTokenService, JwtTokenService>();
@@ -69,6 +71,7 @@ public static class IdentityModule
         app.MapStaffLogin();
         app.MapStaffRoster();
         app.MapRefresh();
+        app.MapLogout();
         app.MapMe();
         return app;
     }
