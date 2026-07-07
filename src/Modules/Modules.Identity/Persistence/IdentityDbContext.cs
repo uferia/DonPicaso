@@ -1,10 +1,16 @@
 using Microsoft.EntityFrameworkCore;
+using Modules.Identity.Features.Branches;
+using Modules.Identity.Features.Brands;
 
 namespace Modules.Identity.Persistence;
 
 public sealed class IdentityDbContext(DbContextOptions<IdentityDbContext> options) : DbContext(options)
 {
     public const string Schema = "identity";
+
+    public DbSet<Brand> Brands => Set<Brand>();
+
+    public DbSet<Branch> Branches => Set<Branch>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
