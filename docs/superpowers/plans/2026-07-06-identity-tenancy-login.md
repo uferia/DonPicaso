@@ -538,7 +538,7 @@ git commit -m "Add Brand and Branch entities to Modules.Identity"
 
 **Interfaces:**
 - Consumes: `Brand`, `Branch` from Task 2.
-- Produces: `UserRole` enum (`Corporate`, `BrandOwner`, `BranchManager`, `Staff` — in this order, since the authorization handler in Task 4 compares enum ranks directly). `User.CreateAdmin(string email, string passwordHash, string displayName, UserRole role, Guid? brandId, Guid? branchId, DateTimeOffset createdAtUtc) -> User`. `User.CreateStaff(string pinHash, string displayName, UserRole role, Guid brandId, Guid branchId, DateTimeOffset createdAtUtc) -> User`. Properties: `Id`, `Email` (nullable), `PasswordHash` (nullable), `DisplayName`, `PinHash` (nullable), `Role`, `BrandId` (nullable), `BranchId` (nullable), `CreatedAtUtc`. `RefreshToken.Create(Guid userId, string tokenHash, DateTimeOffset expiresAtUtc) -> RefreshToken`; `RefreshToken.Revoke(DateTimeOffset revokedAtUtc)`; properties `Id`, `UserId`, `TokenHash`, `ExpiresAtUtc`, `RevokedAtUtc` (nullable).
+- Produces: `UserRole` enum (`Corporate`, `BrandOwner`, `BranchManager`, `Staff` — in this order, since the authorization handler in Task 4 compares enum ranks directly). `User.CreateAdmin(string email, string passwordHash, string displayName, UserRole role, Guid? brandId, Guid? branchId, DateTimeOffset createdAtUtc) -> User` — throws `ArgumentException` if `role` is `UserRole.Staff` (Staff accounts must go through `CreateStaff`). `User.CreateStaff(string pinHash, string displayName, Guid brandId, Guid branchId, DateTimeOffset createdAtUtc) -> User` — no `role` parameter; always sets `Role = UserRole.Staff` internally, so role and credential-shape (PIN vs. password) can never mismatch. Properties: `Id`, `Email` (nullable), `PasswordHash` (nullable), `DisplayName`, `PinHash` (nullable), `Role`, `BrandId` (nullable), `BranchId` (nullable), `CreatedAtUtc`. `RefreshToken.Create(Guid userId, string tokenHash, DateTimeOffset expiresAtUtc) -> RefreshToken`; `RefreshToken.Revoke(DateTimeOffset revokedAtUtc)`; properties `Id`, `UserId`, `TokenHash`, `ExpiresAtUtc`, `RevokedAtUtc` (nullable).
 
 - [ ] **Step 1: Write the failing persistence tests**
 
@@ -576,7 +576,7 @@ public sealed class UserPersistenceTests
     {
         var brandId = Guid.NewGuid();
         var branchId = Guid.NewGuid();
-        var staff = User.CreateStaff("pin-hash", "Staff Member", UserRole.Staff, brandId, branchId, FixedUtcNow);
+        var staff = User.CreateStaff("pin-hash", "Staff Member", brandId, branchId, FixedUtcNow);
 
         _dbContext.Users.Add(staff);
         await _dbContext.SaveChangesAsync();
@@ -675,8 +675,14 @@ public sealed class User
         UserRole role,
         Guid? brandId,
         Guid? branchId,
-        DateTimeOffset createdAtUtc) =>
-        new()
+        DateTimeOffset createdAtUtc)
+    {
+        if (role == UserRole.Staff)
+        {
+            throw new ArgumentException("Staff accounts must be created via CreateStaff.", nameof(role));
+        }
+
+        return new()
         {
             Id = Guid.NewGuid(),
             Email = email,
@@ -687,12 +693,12 @@ public sealed class User
             BranchId = branchId,
             CreatedAtUtc = createdAtUtc,
         };
+    }
 
-    /// <summary>Staff — logs in with a 4-digit PIN on a branch-scoped POS tablet.</summary>
+    /// <summary>Staff — logs in with a 4-digit PIN on a branch-scoped POS tablet. Role is always Staff; there is no room for a caller to pass a mismatched role.</summary>
     public static User CreateStaff(
         string pinHash,
         string displayName,
-        UserRole role,
         Guid brandId,
         Guid branchId,
         DateTimeOffset createdAtUtc) =>
@@ -701,7 +707,7 @@ public sealed class User
             Id = Guid.NewGuid(),
             PinHash = pinHash,
             DisplayName = displayName,
-            Role = role,
+            Role = UserRole.Staff,
             BrandId = brandId,
             BranchId = branchId,
             CreatedAtUtc = createdAtUtc,
@@ -957,7 +963,7 @@ public sealed class JwtTokenServiceTests
     public void CreateAccessToken_ForBranchScopedUser_IncludesSubRoleBrandAndBranchClaims()
     {
         var user = User.CreateStaff(
-            "pin-hash", "Staff Member", UserRole.Staff,
+            "pin-hash", "Staff Member",
             brandId: Guid.NewGuid(), branchId: Guid.NewGuid(), DateTimeOffset.UtcNow);
 
         var accessToken = _tokenService.CreateAccessToken(user, TimeSpan.FromMinutes(15));
@@ -1829,7 +1835,7 @@ public sealed class StaffLoginCommandHandlerTests
 
         var staff = User.CreateStaff(
             passwordHasher.HashPassword(null!, Pin), "Staff Member",
-            UserRole.Staff, brandId: Guid.NewGuid(), branchId: _branchId, FixedUtcNow);
+            brandId: Guid.NewGuid(), branchId: _branchId, FixedUtcNow);
         _staffUserId = staff.Id;
         _dbContext.Users.Add(staff);
         await _dbContext.SaveChangesAsync();
@@ -2622,7 +2628,7 @@ public static class IdentitySeeder
 
         var staff = User.CreateStaff(
             HashPassword(passwordHasher, StaffPin), "Staff Member",
-            UserRole.Staff, brand.Id, branch.Id, now);
+            brand.Id, branch.Id, now);
 
         dbContext.Brands.Add(brand);
         dbContext.Branches.Add(branch);
