@@ -1,3 +1,4 @@
+using Modules.Identity;
 using Modules.Sales;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -19,6 +20,10 @@ builder.Services.AddSalesModule(
     builder.Configuration.GetConnectionString("SalesDb")
         ?? throw new InvalidOperationException("Connection string 'SalesDb' is not configured."));
 
+builder.Services.AddIdentityModule(
+    builder.Configuration.GetConnectionString("IdentityDb")
+        ?? throw new InvalidOperationException("Connection string 'IdentityDb' is not configured."));
+
 var app = builder.Build();
 
 app.UseExceptionHandler();
@@ -31,5 +36,6 @@ if (app.Environment.IsDevelopment())
 }
 
 app.MapSalesModule();
+app.MapIdentityModule();
 
 app.Run();
