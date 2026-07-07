@@ -59,7 +59,15 @@ export class AuthService {
   async logout(): Promise<void> {
     const refreshToken = localStorage.getItem(REFRESH_TOKEN_STORAGE_KEY);
     if (refreshToken) {
-      await firstValueFrom(this.http.post(LOGOUT_URL, { refreshToken }));
+      // Best-effort server-side revoke. The local session must clear
+      // either way - a shared POS tablet should never appear logged in
+      // after the user asked to log out, even if the network dropped or
+      // the token was already invalid.
+      try {
+        await firstValueFrom(this.http.post(LOGOUT_URL, { refreshToken }));
+      } catch {
+        // Ignored - clearSession() below still runs.
+      }
     }
     this.clearSession();
   }

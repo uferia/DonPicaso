@@ -66,6 +66,27 @@ describe('AuthService', () => {
     expect(localStorage.getItem('donpicaso.refreshToken')).toBeNull();
   });
 
+  it('clears the session even when the backend logout call fails', async () => {
+    const loginPromise = service.login({ email: 'corporate@donpicaso.dev', password: 'Password123!' });
+    httpMock.expectOne('/api/v1/auth/login').flush({
+      accessToken: buildFakeAccessToken({ sub: 'user-1', role: 'Corporate' }),
+      accessTokenExpiresAtUtc: new Date().toISOString(),
+      refreshToken: 'refresh-token-value',
+      refreshTokenExpiresAtUtc: new Date().toISOString(),
+    });
+    await loginPromise;
+
+    const logoutPromise = service.logout();
+    httpMock
+      .expectOne('/api/v1/auth/logout')
+      .flush({ message: 'Server Error' }, { status: 500, statusText: 'Internal Server Error' });
+    await logoutPromise;
+
+    expect(service.currentUser()).toBeNull();
+    expect(service.getAccessToken()).toBeNull();
+    expect(localStorage.getItem('donpicaso.refreshToken')).toBeNull();
+  });
+
   it('clears the session when refresh fails', async () => {
     localStorage.setItem('donpicaso.refreshToken', 'stale-token');
 
