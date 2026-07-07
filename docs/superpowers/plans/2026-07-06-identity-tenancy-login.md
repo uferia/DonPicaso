@@ -3845,11 +3845,17 @@ export class StaffLogin implements OnInit {
 
     try {
       await this.authService.staffLogin({ branchId, userId: member.userId, pin: this.pin() });
-      await this.router.navigateByUrl('/pos');
     } catch {
       this.errorMessage.set('Incorrect PIN.');
       this.pin.set('');
+      return;
     }
+
+    // Login succeeded - a navigation failure here isn't a PIN error, so it's
+    // handled separately (fire-and-forget, matching DeviceSetup.save() and
+    // StaffLogin.ngOnInit()'s redirect) rather than reusing the "Incorrect
+    // PIN." message.
+    void this.router.navigateByUrl('/pos');
   }
 }
 ```
