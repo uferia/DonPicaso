@@ -88,4 +88,29 @@ public sealed class LoginCommandHandlerTests
         knownEmailResult.IsSuccess.Should().Be(unknownEmailResult.IsSuccess);
         knownEmailResult.AccessToken.Should().Be(unknownEmailResult.AccessToken);
     }
+
+    [TestMethod]
+    public void DummyUserAndDummyPasswordHash_AreWellFormed()
+    {
+        // The "user not found" path verifies against these fixed dummy
+        // values instead of short-circuiting, so the not-found and
+        // wrong-password paths cost the same amount of hashing work (a
+        // timing side-channel fix - see HandleAsync). This asserts the
+        // static fields the fix depends on are actually usable: a real
+        // user instance and a hash produced by the real hasher, not an
+        // empty/placeholder string that would make the "equal work" claim
+        // false.
+        var dummyUserField = typeof(LoginCommandHandler)
+            .GetField("DummyUser", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+        var dummyHashField = typeof(LoginCommandHandler)
+            .GetField("DummyPasswordHash", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+
+        var dummyUser = dummyUserField!.GetValue(null).Should().BeOfType<User>().Subject;
+        var dummyHash = dummyHashField!.GetValue(null).Should().BeOfType<string>().Subject;
+
+        dummyUser.Role.Should().Be(UserRole.Corporate);
+        dummyHash.Should().NotBeNullOrWhiteSpace();
+        _passwordHasher.VerifyHashedPassword(dummyUser, dummyHash, "dummy-password-for-timing-safety")
+            .Should().Be(PasswordVerificationResult.Success);
+    }
 }

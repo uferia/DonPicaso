@@ -18,6 +18,14 @@ public sealed class StaffLoginCommandHandler(
     private static readonly TimeSpan StaffAccessTokenLifetime = TimeSpan.FromHours(12);
     private static readonly TimeSpan RefreshTokenLifetime = TimeSpan.FromDays(7);
 
+    // Used to give the "user not found" path the same cryptographic cost as
+    // the "user found, wrong PIN" path - see the comment in HandleAsync
+    // below for why this matters.
+    private static readonly User DummyUser = User.CreateStaff(
+        "placeholder", "Dummy", Guid.Empty, Guid.Empty, DateTimeOffset.UnixEpoch);
+    private static readonly string DummyPasswordHash =
+        new PasswordHasher<User>().HashPassword(DummyUser, "dummy-pin-for-timing-safety");
+
     public async Task<LoginResult> HandleAsync(StaffLoginCommand command, CancellationToken cancellationToken = default)
     {
         await validator.ValidateAndThrowAsync(command, cancellationToken);
@@ -25,8 +33,14 @@ public sealed class StaffLoginCommandHandler(
         var user = await dbContext.Users.FirstOrDefaultAsync(
             u => u.Id == command.UserId && u.BranchId == command.BranchId, cancellationToken);
 
-        if (user is null || user.PinHash is null ||
-            passwordHasher.VerifyHashedPassword(user, user.PinHash, command.Pin) == PasswordVerificationResult.Failed)
+        // Same generic failure whether the user/branch pair doesn't exist or
+        // the PIN is wrong. Always verify against a real hash (a fixed dummy
+        // one when no user was found) so both paths take equal time - see
+        // LoginCommandHandler for the same pattern and rationale.
+        var verificationResult = passwordHasher.VerifyHashedPassword(
+            user ?? DummyUser, user?.PinHash ?? DummyPasswordHash, command.Pin);
+
+        if (user is null || user.PinHash is null || verificationResult == PasswordVerificationResult.Failed)
         {
             return LoginResult.Failed();
         }

@@ -18,6 +18,14 @@ public sealed class LoginCommandHandler(
     private static readonly TimeSpan AdminAccessTokenLifetime = TimeSpan.FromMinutes(15);
     private static readonly TimeSpan RefreshTokenLifetime = TimeSpan.FromDays(7);
 
+    // Used to give the "user not found" path the same cryptographic cost as
+    // the "user found, wrong password" path - see the comment in
+    // HandleAsync below for why this matters.
+    private static readonly User DummyUser = User.CreateAdmin(
+        "dummy@donpicaso.internal", "placeholder", "Dummy", UserRole.Corporate, null, null, DateTimeOffset.UnixEpoch);
+    private static readonly string DummyPasswordHash =
+        new PasswordHasher<User>().HashPassword(DummyUser, "dummy-password-for-timing-safety");
+
     public async Task<LoginResult> HandleAsync(LoginCommand command, CancellationToken cancellationToken = default)
     {
         await validator.ValidateAndThrowAsync(command, cancellationToken);
@@ -26,9 +34,14 @@ public sealed class LoginCommandHandler(
 
         // Same generic failure whether the email doesn't exist or the
         // password is wrong, so a caller can't use this endpoint to
-        // enumerate accounts.
-        if (user is null || user.PasswordHash is null ||
-            passwordHasher.VerifyHashedPassword(user, user.PasswordHash, command.Password) == PasswordVerificationResult.Failed)
+        // enumerate accounts. Always verify against a real hash (a fixed
+        // dummy one when no user was found) so both paths take equal time -
+        // otherwise the *response latency* alone leaks which emails exist,
+        // even though the response body is identical either way.
+        var verificationResult = passwordHasher.VerifyHashedPassword(
+            user ?? DummyUser, user?.PasswordHash ?? DummyPasswordHash, command.Password);
+
+        if (user is null || user.PasswordHash is null || verificationResult == PasswordVerificationResult.Failed)
         {
             return LoginResult.Failed();
         }

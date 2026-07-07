@@ -81,4 +81,28 @@ public sealed class StaffLoginCommandHandlerTests
 
         result.IsSuccess.Should().BeFalse();
     }
+
+    [TestMethod]
+    public void DummyUserAndDummyPasswordHash_AreWellFormed()
+    {
+        // The "user/branch not found" path verifies against these fixed
+        // dummy values instead of short-circuiting, so the not-found and
+        // wrong-PIN paths cost the same amount of hashing work (a timing
+        // side-channel fix - see HandleAsync). This asserts the static
+        // fields the fix depends on are actually usable: a real Staff user
+        // instance and a hash produced by the real hasher.
+        var dummyUserField = typeof(StaffLoginCommandHandler)
+            .GetField("DummyUser", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+        var dummyHashField = typeof(StaffLoginCommandHandler)
+            .GetField("DummyPasswordHash", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+
+        var dummyUser = dummyUserField!.GetValue(null).Should().BeOfType<User>().Subject;
+        var dummyHash = dummyHashField!.GetValue(null).Should().BeOfType<string>().Subject;
+        var passwordHasher = new PasswordHasher<User>();
+
+        dummyUser.Role.Should().Be(UserRole.Staff);
+        dummyHash.Should().NotBeNullOrWhiteSpace();
+        passwordHasher.VerifyHashedPassword(dummyUser, dummyHash, "dummy-pin-for-timing-safety")
+            .Should().Be(PasswordVerificationResult.Success);
+    }
 }
