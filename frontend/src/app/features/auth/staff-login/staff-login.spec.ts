@@ -64,4 +64,22 @@ describe('StaffLogin', () => {
     expect(authService.staffLogin).toHaveBeenCalledWith({ branchId: 'branch-123', userId: 'user-1', pin: '1234' });
     expect(navigateSpy).toHaveBeenCalledWith('/pos');
   });
+
+  it('does not show an error message after a successful pin submission', async () => {
+    localStorage.setItem(DEVICE_BRANCH_ID_STORAGE_KEY, 'branch-123');
+    const fixture = TestBed.createComponent(StaffLogin);
+    const component = fixture.componentInstance;
+    const authService = TestBed.inject(AuthService);
+    vi.spyOn(authService, 'staffLogin').mockResolvedValue(undefined);
+
+    const initPromise = component.ngOnInit();
+    httpMock.expectOne('/api/v1/auth/staff/branch-123/users').flush([{ userId: 'user-1', displayName: 'Ana' }]);
+    await initPromise;
+
+    component.selectMember({ userId: 'user-1', displayName: 'Ana' });
+    '1234'.split('').forEach((digit) => component.pressDigit(digit));
+    await component.submitPin();
+
+    expect(component['errorMessage']()).toBeNull();
+  });
 });
