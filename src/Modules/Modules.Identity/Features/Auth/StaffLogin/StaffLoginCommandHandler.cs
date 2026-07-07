@@ -1,0 +1,45 @@
+using FluentValidation;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Modules.Identity.Features.Auth.Login;
+using Modules.Identity.Features.Users;
+using Modules.Identity.Infrastructure;
+using Modules.Identity.Persistence;
+
+namespace Modules.Identity.Features.Auth.StaffLogin;
+
+public sealed class StaffLoginCommandHandler(
+    IdentityDbContext dbContext,
+    IValidator<StaffLoginCommand> validator,
+    IPasswordHasher<User> passwordHasher,
+    IJwtTokenService tokenService,
+    TimeProvider timeProvider)
+{
+    private static readonly TimeSpan StaffAccessTokenLifetime = TimeSpan.FromHours(12);
+    private static readonly TimeSpan RefreshTokenLifetime = TimeSpan.FromDays(7);
+
+    public async Task<LoginResult> HandleAsync(StaffLoginCommand command, CancellationToken cancellationToken = default)
+    {
+        await validator.ValidateAndThrowAsync(command, cancellationToken);
+
+        var user = await dbContext.Users.FirstOrDefaultAsync(
+            u => u.Id == command.UserId && u.BranchId == command.BranchId, cancellationToken);
+
+        if (user is null || user.PinHash is null ||
+            passwordHasher.VerifyHashedPassword(user, user.PinHash, command.Pin) == PasswordVerificationResult.Failed)
+        {
+            return LoginResult.Failed();
+        }
+
+        var now = timeProvider.GetUtcNow();
+        var accessToken = tokenService.CreateAccessToken(user, StaffAccessTokenLifetime);
+        var refreshTokenValue = tokenService.GenerateRefreshTokenValue();
+        var refreshTokenExpiresAt = now.Add(RefreshTokenLifetime);
+
+        dbContext.RefreshTokens.Add(
+            RefreshToken.Create(user.Id, tokenService.HashRefreshToken(refreshTokenValue), refreshTokenExpiresAt));
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        return LoginResult.Succeeded(accessToken.Value, accessToken.ExpiresAtUtc, refreshTokenValue, refreshTokenExpiresAt);
+    }
+}

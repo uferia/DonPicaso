@@ -10,6 +10,8 @@ using Microsoft.IdentityModel.Tokens;
 using Modules.Identity.Authorization;
 using Modules.Identity.Features.Auth.Login;
 using Modules.Identity.Features.Auth.Me;
+using Modules.Identity.Features.Auth.StaffLogin;
+using Modules.Identity.Features.Auth.StaffRoster;
 using Modules.Identity.Features.Users;
 using Modules.Identity.Infrastructure;
 using Modules.Identity.Persistence;
@@ -27,6 +29,8 @@ public static class IdentityModule
 
         services.AddSingleton<IPasswordHasher<User>, PasswordHasher<User>>();
         services.AddScoped<LoginCommandHandler>();
+        services.AddScoped<StaffLoginCommandHandler>();
+        services.AddScoped<GetStaffRosterQueryHandler>();
 
         services.AddSingleton(jwtOptions);
         services.AddSingleton<IJwtTokenService, JwtTokenService>();
@@ -60,6 +64,8 @@ public static class IdentityModule
     public static IEndpointRouteBuilder MapIdentityModule(this IEndpointRouteBuilder app)
     {
         app.MapLogin();
+        app.MapStaffLogin();
+        app.MapStaffRoster();
         app.MapMe();
         return app;
     }
