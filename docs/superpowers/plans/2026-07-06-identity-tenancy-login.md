@@ -3810,7 +3810,12 @@ export class StaffLogin implements OnInit {
   async ngOnInit(): Promise<void> {
     const branchId = localStorage.getItem(DEVICE_BRANCH_ID_STORAGE_KEY);
     if (!branchId) {
-      await this.router.navigateByUrl('/device-setup');
+      // Fire-and-forget, matching DeviceSetup.save() below: on the
+      // installed Angular version (21.2.17), navigateByUrl() to a route
+      // absent from a test's empty provideRouter([]) table rejects its
+      // promise rather than resolving false, which would otherwise
+      // propagate out of ngOnInit() and fail the caller.
+      void this.router.navigateByUrl('/device-setup');
       return;
     }
 
