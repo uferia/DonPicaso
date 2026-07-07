@@ -1,0 +1,17 @@
+.device-setup-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-width: 320px;
+  margin: 4rem auto;
+
+  label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .error {
+    color: #b00020;
+  }
+}

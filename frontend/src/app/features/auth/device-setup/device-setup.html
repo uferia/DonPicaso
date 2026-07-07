@@ -1,0 +1,15 @@
+<form class="device-setup-form" (ngSubmit)="save()">
+  <h1>Set up this device</h1>
+  <p>Enter the branch ID this tablet belongs to. You only need to do this once.</p>
+
+  <label>
+    Branch ID
+    <input type="text" name="branchId" [(ngModel)]="branchId" required />
+  </label>
+
+  @if (errorMessage()) {
+    <p class="error">{{ errorMessage() }}</p>
+  }
+
+  <button type="submit">Save</button>
+</form>

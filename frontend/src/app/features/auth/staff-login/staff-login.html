@@ -1,0 +1,27 @@
+@if (!selectedMember()) {
+  <div class="roster">
+    <h1>Who's working?</h1>
+    @for (member of roster(); track member.userId) {
+      <button type="button" class="roster-member" (click)="selectMember(member)">
+        {{ member.displayName }}
+      </button>
+    }
+  </div>
+} @else {
+  <div class="pin-pad">
+    <h1>{{ selectedMember()!.displayName }}</h1>
+    <p class="pin-dots">{{ pin().padEnd(4, '•').split('').join(' ') }}</p>
+
+    @if (errorMessage()) {
+      <p class="error">{{ errorMessage() }}</p>
+    }
+
+    <div class="digits">
+      @for (digit of digits; track digit) {
+        <button type="button" (click)="pressDigit(digit)">{{ digit }}</button>
+      }
+    </div>
+
+    <button type="button" [disabled]="pin().length < 4" (click)="submitPin()">Enter</button>
+  </div>
+}
