@@ -1,5 +1,8 @@
+using Microsoft.AspNetCore.Identity;
 using Modules.Identity;
+using Modules.Identity.Features.Users;
 using Modules.Identity.Infrastructure;
+using Modules.Identity.Persistence;
 using Modules.Sales;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -40,6 +43,12 @@ app.UseAuthorization();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+
+    using var seedScope = app.Services.CreateScope();
+    await IdentitySeeder.SeedAsync(
+        seedScope.ServiceProvider.GetRequiredService<IdentityDbContext>(),
+        seedScope.ServiceProvider.GetRequiredService<IPasswordHasher<User>>(),
+        TimeProvider.System);
 }
 
 app.MapSalesModule();
