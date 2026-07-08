@@ -3,6 +3,7 @@ using Modules.Identity;
 using Modules.Identity.Features.Users;
 using Modules.Identity.Infrastructure;
 using Modules.Identity.Persistence;
+using Modules.Menu;
 using Modules.Sales;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -23,6 +24,12 @@ builder.Services.AddCors(options => options.AddPolicy(PosCorsPolicy, policy => p
 builder.Services.AddSalesModule(
     builder.Configuration.GetConnectionString("SalesDb")
         ?? throw new InvalidOperationException("Connection string 'SalesDb' is not configured."));
+
+builder.Services.AddMenuModule(
+    builder.Configuration.GetConnectionString("MenuDb")
+        ?? throw new InvalidOperationException("Connection string 'MenuDb' is not configured."),
+    builder.Configuration.GetSection("Menu").Get<MenuOptions>()
+        ?? throw new InvalidOperationException("'Menu' configuration section is not configured."));
 
 var jwtOptions = builder.Configuration.GetSection("Jwt").Get<JwtOptions>()
     ?? throw new InvalidOperationException("'Jwt' configuration section is not configured.");
@@ -52,6 +59,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.MapSalesModule();
+app.MapMenuModule();
 app.MapIdentityModule();
 
 app.Run();

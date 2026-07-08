@@ -3,6 +3,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Modules\Modules.Sales\Modules.Sales.csproj" />
     <ProjectReference Include="..\Modules\Modules.Identity\Modules.Identity.csproj" />
+    <ProjectReference Include="..\Modules\Modules.Menu\Modules.Menu.csproj" />
   </ItemGroup>
 
   <ItemGroup>
