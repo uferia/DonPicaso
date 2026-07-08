@@ -7,6 +7,7 @@ import { Login } from './features/auth/login/login';
 import { StaffLogin } from './features/auth/staff-login/staff-login';
 
 export const routes: Routes = [
+  { path: '', redirectTo: 'login', pathMatch: 'full' },
   { path: 'login', component: Login },
   { path: 'device-setup', component: DeviceSetup },
   { path: 'staff-login', component: StaffLogin },
