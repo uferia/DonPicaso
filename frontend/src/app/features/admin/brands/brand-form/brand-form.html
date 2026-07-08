@@ -1,0 +1,14 @@
+<form (ngSubmit)="submit()">
+  <h1>{{ brandId() ? 'Edit Brand' : 'New Brand' }}</h1>
+
+  <label>
+    Name
+    <input type="text" name="name" [(ngModel)]="name" required />
+  </label>
+
+  @if (errorMessage()) {
+    <p class="error">{{ errorMessage() }}</p>
+  }
+
+  <button type="submit" [disabled]="isSubmitting()">Save</button>
+</form>

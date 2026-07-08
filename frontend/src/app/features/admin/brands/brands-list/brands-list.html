@@ -1,0 +1,23 @@
+<h1>Brands</h1>
+<a routerLink="/admin/brands/new">New Brand</a>
+
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Status</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    @for (brand of brands(); track brand.id) {
+      <tr>
+        <td><a [routerLink]="['/admin/brands', brand.id]">{{ brand.name }}</a></td>
+        <td>{{ brand.isActive ? 'Active' : 'Deactivated' }}</td>
+        <td>
+          <button (click)="toggleActive(brand)">{{ brand.isActive ? 'Deactivate' : 'Reactivate' }}</button>
+        </td>
+      </tr>
+    }
+  </tbody>
+</table>
