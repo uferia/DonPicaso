@@ -1,0 +1,13 @@
+<nav class="admin-nav">
+  @if (currentUser()?.role === Role.Corporate) {
+    <a routerLink="/admin/brands">Brands</a>
+  }
+  @if (currentUser()?.role === Role.BrandOwner && currentUser()?.brandId) {
+    <a [routerLink]="['/admin/brands', currentUser()!.brandId!, 'branches']">Branches</a>
+  }
+  @if (currentUser()?.role === Role.BranchManager && currentUser()?.branchId) {
+    <a [routerLink]="['/admin/branches', currentUser()!.branchId!, 'users']">Users</a>
+  }
+</nav>
+
+<router-outlet />
