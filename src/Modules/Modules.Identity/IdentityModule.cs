@@ -29,6 +29,7 @@ using Modules.Identity.Features.Users.CreateUser;
 using Modules.Identity.Features.Users.GetUser;
 using Modules.Identity.Features.Users.ListUsers;
 using Modules.Identity.Features.Users.ResetCredential;
+using Modules.Identity.Features.Users.SetUserActiveState;
 using Modules.Identity.Features.Users.UpdateUser;
 using Modules.Identity.Infrastructure;
 using Modules.Identity.Persistence;
@@ -65,6 +66,7 @@ public static class IdentityModule
         services.AddScoped<GetUserQueryHandler>();
         services.AddScoped<UpdateUserCommandHandler>();
         services.AddScoped<ResetCredentialCommandHandler>();
+        services.AddScoped<SetUserActiveStateCommandHandler>();
 
         services.AddSingleton(jwtOptions);
         services.AddSingleton<IJwtTokenService, JwtTokenService>();
@@ -120,6 +122,8 @@ public static class IdentityModule
         app.MapGetUser();
         app.MapUpdateUser();
         app.MapResetCredential();
+        app.MapDeactivateUser();
+        app.MapReactivateUser();
         return app;
     }
 }
