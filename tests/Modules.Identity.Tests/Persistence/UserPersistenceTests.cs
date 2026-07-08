@@ -74,4 +74,103 @@ public sealed class UserPersistenceTests
 
         act.Should().Throw<ArgumentException>();
     }
+
+    [TestMethod]
+    public async Task User_WhenCreated_IsActiveByDefault()
+    {
+        var user = User.CreateAdmin(
+            "corporate@donpicaso.dev", "password-hash", "Corporate Admin",
+            UserRole.Corporate, brandId: null, branchId: null, FixedUtcNow);
+
+        _dbContext.Users.Add(user);
+        await _dbContext.SaveChangesAsync();
+
+        (await _dbContext.Users.SingleAsync(u => u.Id == user.Id)).IsActive.Should().BeTrue();
+    }
+
+    [TestMethod]
+    public async Task User_WhenDeactivatedThenReactivated_PersistsBothTransitions()
+    {
+        var user = User.CreateAdmin(
+            "corporate@donpicaso.dev", "password-hash", "Corporate Admin",
+            UserRole.Corporate, brandId: null, branchId: null, FixedUtcNow);
+        _dbContext.Users.Add(user);
+        await _dbContext.SaveChangesAsync();
+
+        user.Deactivate();
+        await _dbContext.SaveChangesAsync();
+        (await _dbContext.Users.SingleAsync(u => u.Id == user.Id)).IsActive.Should().BeFalse();
+
+        user.Reactivate();
+        await _dbContext.SaveChangesAsync();
+        (await _dbContext.Users.SingleAsync(u => u.Id == user.Id)).IsActive.Should().BeTrue();
+    }
+
+    [TestMethod]
+    public void ChangeRole_FromStaffToBrandOwnerWithoutAnEmail_Throws()
+    {
+        var staff = User.CreateStaff("pin-hash", "Staff Member", Guid.NewGuid(), Guid.NewGuid(), FixedUtcNow);
+
+        var act = () => staff.ChangeRole(UserRole.BrandOwner, staff.BrandId, null, email: null, newCredentialHash: "new-password-hash");
+
+        act.Should().Throw<ArgumentException>();
+    }
+
+    [TestMethod]
+    public void ChangeRole_FromStaffToBrandOwnerWithEmailAndPassword_SwapsCredentialType()
+    {
+        var staff = User.CreateStaff("pin-hash", "Staff Member", Guid.NewGuid(), Guid.NewGuid(), FixedUtcNow);
+
+        staff.ChangeRole(UserRole.BrandOwner, staff.BrandId, null, email: "promoted@donpicaso.dev", newCredentialHash: "new-password-hash");
+
+        staff.Role.Should().Be(UserRole.BrandOwner);
+        staff.Email.Should().Be("promoted@donpicaso.dev");
+        staff.PasswordHash.Should().Be("new-password-hash");
+        staff.PinHash.Should().BeNull();
+        staff.BranchId.Should().BeNull();
+    }
+
+    [TestMethod]
+    public void ChangeRole_FromBrandOwnerToStaffWithoutANewPin_Throws()
+    {
+        var owner = User.CreateAdmin(
+            "owner@donpicaso.dev", "password-hash", "Owner", UserRole.BrandOwner, Guid.NewGuid(), null, FixedUtcNow);
+
+        var act = () => owner.ChangeRole(UserRole.Staff, owner.BrandId, Guid.NewGuid(), email: null, newCredentialHash: null);
+
+        act.Should().Throw<ArgumentException>();
+    }
+
+    [TestMethod]
+    public void ChangeRole_BetweenTwoAdminTierRoles_KeepsExistingPasswordHash()
+    {
+        var manager = User.CreateAdmin(
+            "manager@donpicaso.dev", "password-hash", "Manager", UserRole.BranchManager, Guid.NewGuid(), Guid.NewGuid(), FixedUtcNow);
+
+        manager.ChangeRole(UserRole.BrandOwner, manager.BrandId, null, email: null, newCredentialHash: null);
+
+        manager.Role.Should().Be(UserRole.BrandOwner);
+        manager.PasswordHash.Should().Be("password-hash");
+    }
+
+    [TestMethod]
+    public void ResetPassword_OnAStaffUser_Throws()
+    {
+        var staff = User.CreateStaff("pin-hash", "Staff Member", Guid.NewGuid(), Guid.NewGuid(), FixedUtcNow);
+
+        var act = () => staff.ResetPassword("new-password-hash");
+
+        act.Should().Throw<InvalidOperationException>();
+    }
+
+    [TestMethod]
+    public void ResetPin_OnAnAdminUser_Throws()
+    {
+        var owner = User.CreateAdmin(
+            "owner@donpicaso.dev", "password-hash", "Owner", UserRole.BrandOwner, Guid.NewGuid(), null, FixedUtcNow);
+
+        var act = () => owner.ResetPin("new-pin-hash");
+
+        act.Should().Throw<InvalidOperationException>();
+    }
 }

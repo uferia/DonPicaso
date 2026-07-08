@@ -21,6 +21,8 @@ internal sealed class BranchEntityConfiguration : IEntityTypeConfiguration<Branc
             .HasMaxLength(200)
             .IsRequired();
 
+        builder.Property(b => b.IsActive).HasColumnName("is_active").IsRequired();
+
         builder.Property(b => b.CreatedAtUtc)
             .HasColumnName("created_at_utc")
             .HasColumnType("timestamptz")

@@ -35,6 +35,8 @@ internal sealed class UserEntityConfiguration : IEntityTypeConfiguration<User>
         builder.Property(u => u.BrandId).HasColumnName("brand_id");
         builder.Property(u => u.BranchId).HasColumnName("branch_id");
 
+        builder.Property(u => u.IsActive).HasColumnName("is_active").IsRequired();
+
         builder.Property(u => u.CreatedAtUtc)
             .HasColumnName("created_at_utc")
             .HasColumnType("timestamptz")

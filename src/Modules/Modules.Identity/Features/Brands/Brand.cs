@@ -6,6 +6,8 @@ public sealed class Brand
 
     public string Name { get; private set; } = string.Empty;
 
+    public bool IsActive { get; private set; }
+
     public DateTimeOffset CreatedAtUtc { get; private set; }
 
     private Brand()
@@ -18,6 +20,13 @@ public sealed class Brand
         {
             Id = Guid.NewGuid(),
             Name = name,
+            IsActive = true,
             CreatedAtUtc = createdAtUtc,
         };
+
+    public void Rename(string name) => Name = name;
+
+    public void Deactivate() => IsActive = false;
+
+    public void Reactivate() => IsActive = true;
 }

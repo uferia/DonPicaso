@@ -8,6 +8,8 @@ public sealed class Branch
 
     public string Name { get; private set; } = string.Empty;
 
+    public bool IsActive { get; private set; }
+
     public DateTimeOffset CreatedAtUtc { get; private set; }
 
     private Branch()
@@ -21,6 +23,13 @@ public sealed class Branch
             Id = Guid.NewGuid(),
             BrandId = brandId,
             Name = name,
+            IsActive = true,
             CreatedAtUtc = createdAtUtc,
         };
+
+    public void Rename(string name) => Name = name;
+
+    public void Deactivate() => IsActive = false;
+
+    public void Reactivate() => IsActive = true;
 }

@@ -18,6 +18,8 @@ public sealed class User
 
     public Guid? BranchId { get; private set; }
 
+    public bool IsActive { get; private set; }
+
     public DateTimeOffset CreatedAtUtc { get; private set; }
 
     private User()
@@ -49,6 +51,7 @@ public sealed class User
             Role = role,
             BrandId = brandId,
             BranchId = branchId,
+            IsActive = true,
             CreatedAtUtc = createdAtUtc,
         };
     }
@@ -68,6 +71,90 @@ public sealed class User
             Role = UserRole.Staff,
             BrandId = brandId,
             BranchId = branchId,
+            IsActive = true,
             CreatedAtUtc = createdAtUtc,
         };
+
+    public void Rename(string displayName) => DisplayName = displayName;
+
+    public void Deactivate() => IsActive = false;
+
+    public void Reactivate() => IsActive = true;
+
+    public void ResetPassword(string newPasswordHash)
+    {
+        if (Role == UserRole.Staff)
+        {
+            throw new InvalidOperationException("Staff accounts authenticate with a PIN, not a password.");
+        }
+
+        PasswordHash = newPasswordHash;
+    }
+
+    public void ResetPin(string newPinHash)
+    {
+        if (Role != UserRole.Staff)
+        {
+            throw new InvalidOperationException("Only Staff accounts authenticate with a PIN.");
+        }
+
+        PinHash = newPinHash;
+    }
+
+    /// <summary>
+    /// Reassigns role and brand/branch scope. When the change crosses the
+    /// Staff/admin-tier credential-type boundary, <paramref name="newCredentialHash"/>
+    /// must carry the freshly-hashed replacement (PIN hash when moving to
+    /// Staff, password hash otherwise) — the caller is responsible for
+    /// hashing it first, same as CreateAdmin/CreateStaff. When the role
+    /// stays within the same credential tier, the existing hash is left
+    /// untouched and <paramref name="newCredentialHash"/> is ignored.
+    /// </summary>
+    public void ChangeRole(UserRole newRole, Guid? brandId, Guid? branchId, string? email, string? newCredentialHash)
+    {
+        var wasStaff = Role == UserRole.Staff;
+        var willBeStaff = newRole == UserRole.Staff;
+
+        if (willBeStaff)
+        {
+            if (!wasStaff)
+            {
+                if (newCredentialHash is null)
+                {
+                    throw new ArgumentException(
+                        "A new PIN is required when changing a user's role to Staff.", nameof(newCredentialHash));
+                }
+
+                PinHash = newCredentialHash;
+                PasswordHash = null;
+                Email = null;
+            }
+        }
+        else
+        {
+            if (wasStaff)
+            {
+                if (newCredentialHash is null)
+                {
+                    throw new ArgumentException(
+                        "A new password is required when changing a user's role away from Staff.", nameof(newCredentialHash));
+                }
+
+                PasswordHash = newCredentialHash;
+                PinHash = null;
+            }
+
+            if (email is null && Email is null)
+            {
+                throw new ArgumentException(
+                    "An email is required when changing a user's role away from Staff.", nameof(email));
+            }
+
+            Email = email ?? Email;
+        }
+
+        Role = newRole;
+        BrandId = brandId;
+        BranchId = branchId;
+    }
 }
