@@ -43,7 +43,7 @@ describe('BrandsList', () => {
     fixture.detectChanges();
 
     const button: HTMLButtonElement = fixture.nativeElement.querySelector('button');
-    const clickPromise = fixture.componentInstance.toggleActive(fixture.componentInstance.brands()[0]);
+    const clickPromise = fixture.componentInstance.toggleActive(fixture.componentInstance['brands']()[0]);
     httpMock.expectOne('/api/v1/brands/b1/deactivate').flush({
       id: 'b1', name: 'Don Picaso', isActive: false, createdAtUtc: '2026-07-08T00:00:00Z',
     });

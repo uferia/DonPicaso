@@ -44,7 +44,7 @@ describe('AdminRedirect', () => {
 
     TestBed.createComponent(AdminRedirect).componentInstance.ngOnInit();
 
-    expect(navigateSpy).toHaveBeenCalledWith('/admin/branches/branch-1/users');
+    expect(navigateSpy).toHaveBeenCalledWith('/admin/branches/branch-1/users?brandId=brand-1');
   });
 
   it('sends an unauthenticated visitor to /login', () => {

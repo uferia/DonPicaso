@@ -1,0 +1,29 @@
+<h1>Users</h1>
+<a [routerLink]="['/admin/branches', branchId, 'users', 'new']" [queryParams]="{ brandId: brandIdQueryParam }">New User</a>
+
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Role</th>
+      <th>Status</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    @for (user of users(); track user.id) {
+      <tr>
+        <td>
+          <a [routerLink]="['/admin/branches', branchId, 'users', user.id]" [queryParams]="{ brandId: brandIdQueryParam }">
+            {{ user.displayName }}
+          </a>
+        </td>
+        <td>{{ user.role }}</td>
+        <td>{{ user.isActive ? 'Active' : 'Deactivated' }}</td>
+        <td>
+          <button (click)="toggleActive(user)">{{ user.isActive ? 'Deactivate' : 'Reactivate' }}</button>
+        </td>
+      </tr>
+    }
+  </tbody>
+</table>

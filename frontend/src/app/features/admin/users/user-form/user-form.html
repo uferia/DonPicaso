@@ -1,0 +1,83 @@
+<form (ngSubmit)="submit()">
+  <h1>{{ userId() ? 'Edit User' : 'New User' }}</h1>
+
+  <label>
+    Display Name
+    <input type="text" name="displayName" [(ngModel)]="displayName" required />
+  </label>
+
+  <label>
+    Role
+    <select name="role" [(ngModel)]="role">
+      <option [value]="Role.Corporate">Corporate</option>
+      <option [value]="Role.BrandOwner">Brand Owner</option>
+      <option [value]="Role.BranchManager">Branch Manager</option>
+      <option [value]="Role.Staff">Staff</option>
+    </select>
+  </label>
+
+  @if (role !== Role.Corporate) {
+    <label>
+      Brand Id
+      <input type="text" name="brandId" [(ngModel)]="brandId" required />
+    </label>
+  }
+
+  @if (role === Role.BranchManager || role === Role.Staff) {
+    <label>
+      Branch Id
+      <input type="text" name="branchId" [(ngModel)]="branchId" required />
+    </label>
+  }
+
+  @if (!isStaff()) {
+    <label>
+      Email
+      <input type="email" name="email" [(ngModel)]="email" required />
+    </label>
+  }
+
+  @if (!userId()) {
+    @if (isStaff()) {
+      <label>
+        PIN
+        <input type="password" name="pin" [(ngModel)]="pin" required />
+      </label>
+    } @else {
+      <label>
+        Password
+        <input type="password" name="password" [(ngModel)]="password" required />
+      </label>
+    }
+  }
+
+  @if (errorMessage()) {
+    <p class="error">{{ errorMessage() }}</p>
+  }
+
+  <button type="submit" [disabled]="isSubmitting()">Save</button>
+</form>
+
+@if (userId()) {
+  <section class="credential-reset">
+    <h2>Reset Credential</h2>
+
+    @if (isStaff()) {
+      <label>
+        New PIN
+        <input type="password" name="newPin" [(ngModel)]="newPin" />
+      </label>
+    } @else {
+      <label>
+        New Password
+        <input type="password" name="newPassword" [(ngModel)]="newPassword" />
+      </label>
+    }
+
+    @if (credentialResetMessage()) {
+      <p>{{ credentialResetMessage() }}</p>
+    }
+
+    <button type="button" (click)="resetCredential()">Reset Credential</button>
+  </section>
+}

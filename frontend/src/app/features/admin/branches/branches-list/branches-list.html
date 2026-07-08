@@ -16,6 +16,7 @@
         <td>{{ branch.isActive ? 'Active' : 'Deactivated' }}</td>
         <td>
           <button (click)="toggleActive(branch)">{{ branch.isActive ? 'Deactivate' : 'Reactivate' }}</button>
+          <a [routerLink]="['/admin/branches', branch.id, 'users']" [queryParams]="{ brandId: branch.brandId }">Users</a>
         </td>
       </tr>
     }

@@ -27,7 +27,7 @@ export class AdminRedirect implements OnInit {
         void this.router.navigateByUrl(`/admin/brands/${user.brandId}/branches`);
         break;
       default:
-        void this.router.navigateByUrl(`/admin/branches/${user.branchId}/users`);
+        void this.router.navigateByUrl(`/admin/branches/${user.branchId}/users?brandId=${user.brandId}`);
         break;
     }
   }
