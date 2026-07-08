@@ -92,6 +92,22 @@ public sealed class ListUsersQueryHandlerTests
     }
 
     [TestMethod]
+    public async Task HandleAsync_BrandOwner_FilteringByARealBranchBelongingToADifferentBrand_ReturnsForbidden()
+    {
+        var otherBrand = Brand.Create("Rival Brand", FixedUtcNow);
+        var otherBrandBranch = Branch.Create(otherBrand.Id, "Rival Branch", FixedUtcNow);
+        _dbContext.Brands.Add(otherBrand);
+        _dbContext.Branches.Add(otherBrandBranch);
+        await _dbContext.SaveChangesAsync();
+
+        var requester = new RequestingUserContext(UserRole.BrandOwner, _brandId, BranchId: null);
+
+        var result = await _handler.HandleAsync(requester, brandIdFilter: null, branchIdFilter: otherBrandBranch.Id);
+
+        result.IsForbidden.Should().BeTrue();
+    }
+
+    [TestMethod]
     public async Task HandleAsync_Corporate_CanSeeEveryoneOrFilterByAnyBrandOrBranch()
     {
         var requester = new RequestingUserContext(UserRole.Corporate, BrandId: null, BranchId: null);
