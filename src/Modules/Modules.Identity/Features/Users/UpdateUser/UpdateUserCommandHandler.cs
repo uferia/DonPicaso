@@ -33,6 +33,16 @@ public sealed class UpdateUserCommandHandler(
             return UserResult.Failed(UserOperationError.Forbidden);
         }
 
+        if (command.BrandId is not null && command.BranchId is not null)
+        {
+            var branchBelongsToBrand = await dbContext.Branches.AnyAsync(
+                b => b.Id == command.BranchId && b.BrandId == command.BrandId, cancellationToken);
+            if (!branchBelongsToBrand)
+            {
+                return UserResult.Failed(UserOperationError.Forbidden);
+            }
+        }
+
         var changingToStaff = command.Role == UserRole.Staff;
         var changingCredentialType = changingToStaff != (user.Role == UserRole.Staff);
 

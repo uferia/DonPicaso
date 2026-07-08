@@ -57,4 +57,31 @@ public sealed class SetBranchActiveStateCommandHandlerTests
 
         result.Should().BeNull();
     }
+
+    [TestMethod]
+    public async Task HandleAsync_ReactivatingADeactivatedBranch_PersistsIsActiveTrue()
+    {
+        var brand = Brand.Create("Don Picaso Original", FixedUtcNow);
+        var branch = Branch.Create(brand.Id, "Downtown", FixedUtcNow);
+        branch.Deactivate();
+        _dbContext.Brands.Add(brand);
+        _dbContext.Branches.Add(branch);
+        await _dbContext.SaveChangesAsync();
+
+        var result = await _handler.HandleAsync(brand.Id, branch.Id, isActive: true);
+
+        result!.IsActive.Should().BeTrue();
+    }
+
+    [TestMethod]
+    public async Task HandleAsync_WithAnUnknownBranchId_ReturnsNull()
+    {
+        var brand = Brand.Create("Don Picaso Original", FixedUtcNow);
+        _dbContext.Brands.Add(brand);
+        await _dbContext.SaveChangesAsync();
+
+        var result = await _handler.HandleAsync(brand.Id, Guid.NewGuid(), isActive: false);
+
+        result.Should().BeNull();
+    }
 }

@@ -2,6 +2,8 @@ using FluentAssertions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Modules.Identity.Authorization;
+using Modules.Identity.Features.Branches;
+using Modules.Identity.Features.Brands;
 using Modules.Identity.Features.Users;
 using Modules.Identity.Features.Users.CreateUser;
 using Modules.Identity.Persistence;
@@ -52,9 +54,14 @@ public sealed class CreateUserCommandHandlerTests
     [TestMethod]
     public async Task HandleAsync_BrandOwnerCreatingStaffWithinOwnBrand_Succeeds()
     {
-        var brandId = Guid.NewGuid();
-        var requester = new RequestingUserContext(UserRole.BrandOwner, brandId, BranchId: null);
-        var command = new CreateUserCommand(null, "Staff Member", UserRole.Staff, brandId, Guid.NewGuid(), null, "1234");
+        var brand = Brand.Create("Don Picaso Original", FixedUtcNow);
+        var branch = Branch.Create(brand.Id, "Downtown", FixedUtcNow);
+        _dbContext.Brands.Add(brand);
+        _dbContext.Branches.Add(branch);
+        await _dbContext.SaveChangesAsync();
+
+        var requester = new RequestingUserContext(UserRole.BrandOwner, brand.Id, BranchId: null);
+        var command = new CreateUserCommand(null, "Staff Member", UserRole.Staff, brand.Id, branch.Id, null, "1234");
 
         var result = await _handler.HandleAsync(requester, command);
 
@@ -86,5 +93,24 @@ public sealed class CreateUserCommandHandlerTests
         var result = await _handler.HandleAsync(requester, command);
 
         result.Error.Should().Be(UserOperationError.Forbidden);
+    }
+
+    [TestMethod]
+    public async Task HandleAsync_BrandOwnerCreatingStaffWithARealBranchBelongingToADifferentBrand_ReturnsForbidden()
+    {
+        var brand = Brand.Create("Don Picaso Original", FixedUtcNow);
+        var otherBrand = Brand.Create("Rival Brand", FixedUtcNow);
+        var otherBrandBranch = Branch.Create(otherBrand.Id, "Rival Branch", FixedUtcNow);
+        _dbContext.Brands.AddRange(brand, otherBrand);
+        _dbContext.Branches.Add(otherBrandBranch);
+        await _dbContext.SaveChangesAsync();
+
+        var requester = new RequestingUserContext(UserRole.BrandOwner, brand.Id, BranchId: null);
+        var command = new CreateUserCommand(null, "Staff Member", UserRole.Staff, brand.Id, otherBrandBranch.Id, null, "1234");
+
+        var result = await _handler.HandleAsync(requester, command);
+
+        result.Error.Should().Be(UserOperationError.Forbidden);
+        (await _dbContext.Users.CountAsync()).Should().Be(0);
     }
 }

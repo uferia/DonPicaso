@@ -1,5 +1,6 @@
 using FluentValidation;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Modules.Identity.Authorization;
 using Modules.Identity.Persistence;
 
@@ -19,6 +20,16 @@ public sealed class CreateUserCommandHandler(
         if (!UserProvisioningRules.CanAssign(requester, command.Role, command.BrandId, command.BranchId))
         {
             return UserResult.Failed(UserOperationError.Forbidden);
+        }
+
+        if (command.BrandId is not null && command.BranchId is not null)
+        {
+            var branchBelongsToBrand = await dbContext.Branches.AnyAsync(
+                b => b.Id == command.BranchId && b.BrandId == command.BrandId, cancellationToken);
+            if (!branchBelongsToBrand)
+            {
+                return UserResult.Failed(UserOperationError.Forbidden);
+            }
         }
 
         var now = timeProvider.GetUtcNow();

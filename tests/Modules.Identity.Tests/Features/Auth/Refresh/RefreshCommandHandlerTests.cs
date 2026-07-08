@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using Moq;
 using Modules.Identity.Features.Auth;
 using Modules.Identity.Features.Auth.Refresh;
+using Modules.Identity.Features.Branches;
+using Modules.Identity.Features.Brands;
 using Modules.Identity.Features.Users;
 using Modules.Identity.Infrastructure;
 using Modules.Identity.Persistence;
@@ -17,7 +19,9 @@ public sealed class RefreshCommandHandlerTests
     private IdentityDbContext _dbContext = null!;
     private Mock<TimeProvider> _timeProviderMock = null!;
     private RefreshCommandHandler _handler = null!;
+    private JwtTokenService _tokenService = null!;
     private string _refreshTokenValue = null!;
+    private Guid _userId;
 
     [TestInitialize]
     public async Task TestInitialize()
@@ -27,7 +31,7 @@ public sealed class RefreshCommandHandlerTests
             .Options;
 
         _dbContext = new IdentityDbContext(options);
-        var tokenService = new JwtTokenService(new JwtOptions
+        _tokenService = new JwtTokenService(new JwtOptions
         {
             Issuer = "DonPicaso.Tests",
             Audience = "DonPicaso.Tests.Pos",
@@ -41,13 +45,14 @@ public sealed class RefreshCommandHandlerTests
             "corporate@donpicaso.dev", "password-hash", "Corporate Admin",
             UserRole.Corporate, brandId: null, branchId: null, FixedUtcNow);
         _dbContext.Users.Add(user);
+        _userId = user.Id;
 
-        _refreshTokenValue = tokenService.GenerateRefreshTokenValue();
+        _refreshTokenValue = _tokenService.GenerateRefreshTokenValue();
         _dbContext.RefreshTokens.Add(RefreshToken.Create(
-            user.Id, tokenService.HashRefreshToken(_refreshTokenValue), FixedUtcNow.AddDays(7)));
+            user.Id, _tokenService.HashRefreshToken(_refreshTokenValue), FixedUtcNow.AddDays(7)));
         await _dbContext.SaveChangesAsync();
 
-        _handler = new RefreshCommandHandler(_dbContext, new RefreshCommandValidator(), tokenService, _timeProviderMock.Object);
+        _handler = new RefreshCommandHandler(_dbContext, new RefreshCommandValidator(), _tokenService, _timeProviderMock.Object);
     }
 
     [TestCleanup]
@@ -88,6 +93,66 @@ public sealed class RefreshCommandHandlerTests
         await _dbContext.SaveChangesAsync();
 
         var result = await _handler.HandleAsync(new RefreshCommand(_refreshTokenValue));
+
+        result.IsSuccess.Should().BeFalse();
+    }
+
+    [TestMethod]
+    public async Task HandleAsync_WhenUserIsDeactivated_Fails()
+    {
+        var user = await _dbContext.Users.SingleAsync(u => u.Id == _userId);
+        user.Deactivate();
+        await _dbContext.SaveChangesAsync();
+
+        var result = await _handler.HandleAsync(new RefreshCommand(_refreshTokenValue));
+
+        result.IsSuccess.Should().BeFalse();
+    }
+
+    [TestMethod]
+    public async Task HandleAsync_WhenAssignedBranchIsDeactivated_Fails()
+    {
+        var branch = Branch.Create(Guid.NewGuid(), "Downtown", FixedUtcNow);
+        _dbContext.Branches.Add(branch);
+        var user = User.CreateAdmin(
+            "manager@donpicaso.dev", "password-hash", "Branch Manager",
+            UserRole.BranchManager, branch.BrandId, branch.Id, FixedUtcNow);
+        _dbContext.Users.Add(user);
+        await _dbContext.SaveChangesAsync();
+
+        branch.Deactivate();
+        await _dbContext.SaveChangesAsync();
+
+        var refreshTokenValue = _tokenService.GenerateRefreshTokenValue();
+        _dbContext.RefreshTokens.Add(RefreshToken.Create(
+            user.Id, _tokenService.HashRefreshToken(refreshTokenValue), FixedUtcNow.AddDays(7)));
+        await _dbContext.SaveChangesAsync();
+
+        var result = await _handler.HandleAsync(new RefreshCommand(refreshTokenValue));
+
+        result.IsSuccess.Should().BeFalse();
+    }
+
+    [TestMethod]
+    public async Task HandleAsync_WhenAssignedBrandIsDeactivated_Fails()
+    {
+        var brand = Brand.Create("Don Picaso Original", FixedUtcNow);
+        _dbContext.Brands.Add(brand);
+        var user = User.CreateAdmin(
+            "owner@donpicaso.dev", "password-hash", "Brand Owner",
+            UserRole.BrandOwner, brand.Id, branchId: null, FixedUtcNow);
+        _dbContext.Users.Add(user);
+        await _dbContext.SaveChangesAsync();
+
+        brand.Deactivate();
+        await _dbContext.SaveChangesAsync();
+
+        var refreshTokenValue = _tokenService.GenerateRefreshTokenValue();
+        _dbContext.RefreshTokens.Add(RefreshToken.Create(
+            user.Id, _tokenService.HashRefreshToken(refreshTokenValue), FixedUtcNow.AddDays(7)));
+        await _dbContext.SaveChangesAsync();
+
+        var result = await _handler.HandleAsync(new RefreshCommand(refreshTokenValue));
 
         result.IsSuccess.Should().BeFalse();
     }

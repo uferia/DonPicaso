@@ -2,6 +2,8 @@ using FluentAssertions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Modules.Identity.Authorization;
+using Modules.Identity.Features.Branches;
+using Modules.Identity.Features.Brands;
 using Modules.Identity.Features.Users;
 using Modules.Identity.Features.Users.CreateUser;
 using Modules.Identity.Features.Users.UpdateUser;
@@ -34,14 +36,17 @@ public sealed class UpdateUserCommandHandlerTests
     [TestMethod]
     public async Task HandleAsync_RenamingAUserWithinScope_Succeeds()
     {
-        var brandId = Guid.NewGuid();
-        var branchId = Guid.NewGuid();
-        var staff = User.CreateStaff("pin-hash", "Staff Member", brandId, branchId, FixedUtcNow);
+        var brand = Brand.Create("Don Picaso Original", FixedUtcNow);
+        var branch = Branch.Create(brand.Id, "Downtown", FixedUtcNow);
+        _dbContext.Brands.Add(brand);
+        _dbContext.Branches.Add(branch);
+        var staff = User.CreateStaff("pin-hash", "Staff Member", brand.Id, branch.Id, FixedUtcNow);
         _dbContext.Users.Add(staff);
         await _dbContext.SaveChangesAsync();
 
-        var requester = new RequestingUserContext(UserRole.BranchManager, brandId, branchId);
-        var command = new UpdateUserCommand("Renamed Staff", UserRole.Staff, brandId, branchId, Email: null, NewPassword: null, NewPin: null);
+        var requester = new RequestingUserContext(UserRole.BranchManager, brand.Id, branch.Id);
+        var command = new UpdateUserCommand(
+            "Renamed Staff", UserRole.Staff, brand.Id, branch.Id, Email: null, NewPassword: null, NewPin: null);
 
         var result = await _handler.HandleAsync(requester, staff.Id, command);
 
@@ -88,16 +93,18 @@ public sealed class UpdateUserCommandHandlerTests
     [TestMethod]
     public async Task HandleAsync_DemotingABranchManagerToStaffWithoutANewPin_ReturnsInvalidRoleAssignment()
     {
-        var brandId = Guid.NewGuid();
-        var branchId = Guid.NewGuid();
+        var brand = Brand.Create("Don Picaso Original", FixedUtcNow);
+        var branch = Branch.Create(brand.Id, "Downtown", FixedUtcNow);
+        _dbContext.Brands.Add(brand);
+        _dbContext.Branches.Add(branch);
         var manager = User.CreateAdmin(
-            "manager@donpicaso.dev", "password-hash", "Branch Manager", UserRole.BranchManager, brandId, branchId, FixedUtcNow);
+            "manager@donpicaso.dev", "password-hash", "Branch Manager", UserRole.BranchManager, brand.Id, branch.Id, FixedUtcNow);
         _dbContext.Users.Add(manager);
         await _dbContext.SaveChangesAsync();
 
         var requester = new RequestingUserContext(UserRole.Corporate, BrandId: null, BranchId: null);
         var command = new UpdateUserCommand(
-            "Demoted Staff", UserRole.Staff, brandId, branchId, Email: null, NewPassword: null, NewPin: null);
+            "Demoted Staff", UserRole.Staff, brand.Id, branch.Id, Email: null, NewPassword: null, NewPin: null);
 
         var result = await _handler.HandleAsync(requester, manager.Id, command);
 
@@ -146,5 +153,27 @@ public sealed class UpdateUserCommandHandlerTests
         var result = await _handler.HandleAsync(requester, Guid.NewGuid(), command);
 
         result.Error.Should().Be(UserOperationError.NotFound);
+    }
+
+    [TestMethod]
+    public async Task HandleAsync_BrandOwnerAssigningAUserToARealBranchBelongingToADifferentBrand_ReturnsForbidden()
+    {
+        var brand = Brand.Create("Don Picaso Original", FixedUtcNow);
+        var otherBrand = Brand.Create("Rival Brand", FixedUtcNow);
+        var homeBranch = Branch.Create(brand.Id, "Home Branch", FixedUtcNow);
+        var otherBrandBranch = Branch.Create(otherBrand.Id, "Rival Branch", FixedUtcNow);
+        _dbContext.Brands.AddRange(brand, otherBrand);
+        _dbContext.Branches.AddRange(homeBranch, otherBrandBranch);
+        var staff = User.CreateStaff("pin-hash", "Staff Member", brand.Id, homeBranch.Id, FixedUtcNow);
+        _dbContext.Users.Add(staff);
+        await _dbContext.SaveChangesAsync();
+
+        var requester = new RequestingUserContext(UserRole.BrandOwner, brand.Id, BranchId: null);
+        var command = new UpdateUserCommand(
+            "Staff Member", UserRole.Staff, brand.Id, otherBrandBranch.Id, Email: null, NewPassword: null, NewPin: null);
+
+        var result = await _handler.HandleAsync(requester, staff.Id, command);
+
+        result.Error.Should().Be(UserOperationError.Forbidden);
     }
 }

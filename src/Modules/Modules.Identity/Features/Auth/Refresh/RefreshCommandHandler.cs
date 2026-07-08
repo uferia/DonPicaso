@@ -32,6 +32,11 @@ public sealed class RefreshCommandHandler(
 
         var user = await dbContext.Users.FirstAsync(u => u.Id == existing.UserId, cancellationToken);
 
+        if (!await EffectiveActiveCheck.IsEffectivelyActiveAsync(dbContext, user, cancellationToken))
+        {
+            return LoginResult.Failed();
+        }
+
         var lifetime = user.Role == UserRole.Staff ? StaffAccessTokenLifetime : AdminAccessTokenLifetime;
         var accessToken = tokenService.CreateAccessToken(user, lifetime);
 
