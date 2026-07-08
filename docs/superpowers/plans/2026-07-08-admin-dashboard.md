@@ -450,20 +450,22 @@ public sealed class User
 In `src/Modules/Modules.Identity/Features/Brands/BrandEntityConfiguration.cs`, add after the `Name` property mapping:
 
 ```csharp
-        builder.Property(b => b.IsActive).HasColumnName("is_active").IsRequired();
+        builder.Property(b => b.IsActive).HasColumnName("is_active").IsRequired().HasDefaultValue(true);
 ```
 
 In `src/Modules/Modules.Identity/Features/Branches/BranchEntityConfiguration.cs`, add after the `Name` property mapping:
 
 ```csharp
-        builder.Property(b => b.IsActive).HasColumnName("is_active").IsRequired();
+        builder.Property(b => b.IsActive).HasColumnName("is_active").IsRequired().HasDefaultValue(true);
 ```
 
 In `src/Modules/Modules.Identity/Features/Users/UserEntityConfiguration.cs`, add after the `Role`/`BranchId` property mappings (before `CreatedAtUtc`):
 
 ```csharp
-        builder.Property(u => u.IsActive).HasColumnName("is_active").IsRequired();
+        builder.Property(u => u.IsActive).HasColumnName("is_active").IsRequired().HasDefaultValue(true);
 ```
+
+`.HasDefaultValue(true)` is required here — without it, EF Core falls back to the CLR default for `bool` (`false`) when generating the column's SQL default in Step 8, contradicting this task's own stated migration expectation.
 
 - [ ] **Step 7: Run the tests to verify they pass**
 

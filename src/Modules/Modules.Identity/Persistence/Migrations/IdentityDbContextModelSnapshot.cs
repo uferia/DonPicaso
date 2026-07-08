@@ -75,7 +75,9 @@ namespace Modules.Identity.Persistence.Migrations
                         .HasColumnName("created_at_utc");
 
                     b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
+                        .HasDefaultValue(true)
                         .HasColumnName("is_active");
 
                     b.Property<string>("Name")
@@ -104,7 +106,9 @@ namespace Modules.Identity.Persistence.Migrations
                         .HasColumnName("created_at_utc");
 
                     b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
+                        .HasDefaultValue(true)
                         .HasColumnName("is_active");
 
                     b.Property<string>("Name")
@@ -149,7 +153,9 @@ namespace Modules.Identity.Persistence.Migrations
                         .HasColumnName("email");
 
                     b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
+                        .HasDefaultValue(true)
                         .HasColumnName("is_active");
 
                     b.Property<string>("PasswordHash")

@@ -18,7 +18,7 @@ internal sealed class BrandEntityConfiguration : IEntityTypeConfiguration<Brand>
             .HasMaxLength(200)
             .IsRequired();
 
-        builder.Property(b => b.IsActive).HasColumnName("is_active").IsRequired();
+        builder.Property(b => b.IsActive).HasColumnName("is_active").IsRequired().HasDefaultValue(true);
 
         builder.Property(b => b.CreatedAtUtc)
             .HasColumnName("created_at_utc")

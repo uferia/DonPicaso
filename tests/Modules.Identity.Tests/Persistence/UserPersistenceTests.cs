@@ -117,6 +117,19 @@ public sealed class UserPersistenceTests
     }
 
     [TestMethod]
+    public void ChangeRole_FromStaffToBrandOwnerWithoutAnEmail_LeavesUserCompletelyUnchanged()
+    {
+        var staff = User.CreateStaff("pin-hash", "Staff Member", Guid.NewGuid(), Guid.NewGuid(), FixedUtcNow);
+
+        var act = () => staff.ChangeRole(UserRole.BrandOwner, staff.BrandId, null, email: null, newCredentialHash: "new-password-hash");
+
+        act.Should().Throw<ArgumentException>();
+        staff.Role.Should().Be(UserRole.Staff);
+        staff.PinHash.Should().Be("pin-hash");
+        staff.PasswordHash.Should().BeNull();
+    }
+
+    [TestMethod]
     public void ChangeRole_FromStaffToBrandOwnerWithEmailAndPassword_SwapsCredentialType()
     {
         var staff = User.CreateStaff("pin-hash", "Staff Member", Guid.NewGuid(), Guid.NewGuid(), FixedUtcNow);

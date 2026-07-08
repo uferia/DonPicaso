@@ -132,22 +132,22 @@ public sealed class User
         }
         else
         {
-            if (wasStaff)
+            if (wasStaff && newCredentialHash is null)
             {
-                if (newCredentialHash is null)
-                {
-                    throw new ArgumentException(
-                        "A new password is required when changing a user's role away from Staff.", nameof(newCredentialHash));
-                }
-
-                PasswordHash = newCredentialHash;
-                PinHash = null;
+                throw new ArgumentException(
+                    "A new password is required when changing a user's role away from Staff.", nameof(newCredentialHash));
             }
 
             if (email is null && Email is null)
             {
                 throw new ArgumentException(
                     "An email is required when changing a user's role away from Staff.", nameof(email));
+            }
+
+            if (wasStaff)
+            {
+                PasswordHash = newCredentialHash;
+                PinHash = null;
             }
 
             Email = email ?? Email;

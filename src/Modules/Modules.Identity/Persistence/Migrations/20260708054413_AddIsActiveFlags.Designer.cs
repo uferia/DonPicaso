@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Modules.Identity.Persistence.Migrations
 {
     [DbContext(typeof(IdentityDbContext))]
-    [Migration("20260708053531_AddIsActiveFlags")]
+    [Migration("20260708054413_AddIsActiveFlags")]
     partial class AddIsActiveFlags
     {
         /// <inheritdoc />
@@ -78,7 +78,9 @@ namespace Modules.Identity.Persistence.Migrations
                         .HasColumnName("created_at_utc");
 
                     b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
+                        .HasDefaultValue(true)
                         .HasColumnName("is_active");
 
                     b.Property<string>("Name")
@@ -107,7 +109,9 @@ namespace Modules.Identity.Persistence.Migrations
                         .HasColumnName("created_at_utc");
 
                     b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
+                        .HasDefaultValue(true)
                         .HasColumnName("is_active");
 
                     b.Property<string>("Name")
@@ -152,7 +156,9 @@ namespace Modules.Identity.Persistence.Migrations
                         .HasColumnName("email");
 
                     b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
+                        .HasDefaultValue(true)
                         .HasColumnName("is_active");
 
                     b.Property<string>("PasswordHash")

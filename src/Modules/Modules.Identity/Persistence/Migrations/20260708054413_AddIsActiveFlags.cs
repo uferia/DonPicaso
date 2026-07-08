@@ -16,7 +16,7 @@ namespace Modules.Identity.Persistence.Migrations
                 table: "users",
                 type: "boolean",
                 nullable: false,
-                defaultValue: false);
+                defaultValue: true);
 
             migrationBuilder.AddColumn<bool>(
                 name: "is_active",
@@ -24,7 +24,7 @@ namespace Modules.Identity.Persistence.Migrations
                 table: "brands",
                 type: "boolean",
                 nullable: false,
-                defaultValue: false);
+                defaultValue: true);
 
             migrationBuilder.AddColumn<bool>(
                 name: "is_active",
@@ -32,7 +32,7 @@ namespace Modules.Identity.Persistence.Migrations
                 table: "branches",
                 type: "boolean",
                 nullable: false,
-                defaultValue: false);
+                defaultValue: true);
         }
 
         /// <inheritdoc />
