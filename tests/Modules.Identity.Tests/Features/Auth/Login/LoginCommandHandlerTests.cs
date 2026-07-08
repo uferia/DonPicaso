@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Moq;
 using Modules.Identity.Features.Auth.Login;
+using Modules.Identity.Features.Branches;
+using Modules.Identity.Features.Brands;
 using Modules.Identity.Features.Users;
 using Modules.Identity.Infrastructure;
 using Modules.Identity.Persistence;
@@ -112,5 +114,55 @@ public sealed class LoginCommandHandlerTests
         dummyHash.Should().NotBeNullOrWhiteSpace();
         _passwordHasher.VerifyHashedPassword(dummyUser, dummyHash, "dummy-password-for-timing-safety")
             .Should().Be(PasswordVerificationResult.Success);
+    }
+
+    [TestMethod]
+    public async Task HandleAsync_WhenUserIsDeactivated_FailsTheSameShapeAsAWrongPassword()
+    {
+        var user = await _dbContext.Users.SingleAsync(u => u.Email == Email);
+        user.Deactivate();
+        await _dbContext.SaveChangesAsync();
+
+        var result = await _handler.HandleAsync(new LoginCommand(Email, Password));
+
+        result.IsSuccess.Should().BeFalse();
+    }
+
+    [TestMethod]
+    public async Task HandleAsync_WhenAssignedBranchIsDeactivated_Fails()
+    {
+        var branch = Branch.Create(Guid.NewGuid(), "Downtown", FixedUtcNow);
+        _dbContext.Branches.Add(branch);
+        var user = User.CreateAdmin(
+            "manager@donpicaso.dev", _passwordHasher.HashPassword(null!, Password), "Branch Manager",
+            UserRole.BranchManager, branch.BrandId, branch.Id, FixedUtcNow);
+        _dbContext.Users.Add(user);
+        await _dbContext.SaveChangesAsync();
+
+        branch.Deactivate();
+        await _dbContext.SaveChangesAsync();
+
+        var result = await _handler.HandleAsync(new LoginCommand("manager@donpicaso.dev", Password));
+
+        result.IsSuccess.Should().BeFalse();
+    }
+
+    [TestMethod]
+    public async Task HandleAsync_WhenAssignedBrandIsDeactivated_Fails()
+    {
+        var brand = Brand.Create("Don Picaso Original", FixedUtcNow);
+        _dbContext.Brands.Add(brand);
+        var user = User.CreateAdmin(
+            "owner@donpicaso.dev", _passwordHasher.HashPassword(null!, Password), "Brand Owner",
+            UserRole.BrandOwner, brand.Id, branchId: null, FixedUtcNow);
+        _dbContext.Users.Add(user);
+        await _dbContext.SaveChangesAsync();
+
+        brand.Deactivate();
+        await _dbContext.SaveChangesAsync();
+
+        var result = await _handler.HandleAsync(new LoginCommand("owner@donpicaso.dev", Password));
+
+        result.IsSuccess.Should().BeFalse();
     }
 }

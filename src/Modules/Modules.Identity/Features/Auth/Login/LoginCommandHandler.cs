@@ -2,6 +2,8 @@ using FluentValidation;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Modules.Identity.Features.Auth;
+using Modules.Identity.Features.Branches;
+using Modules.Identity.Features.Brands;
 using Modules.Identity.Features.Users;
 using Modules.Identity.Infrastructure;
 using Modules.Identity.Persistence;
@@ -46,6 +48,11 @@ public sealed class LoginCommandHandler(
             return LoginResult.Failed();
         }
 
+        if (!await IsEffectivelyActiveAsync(user, cancellationToken))
+        {
+            return LoginResult.Failed();
+        }
+
         var now = timeProvider.GetUtcNow();
         var accessToken = tokenService.CreateAccessToken(user, AdminAccessTokenLifetime);
         var refreshTokenValue = tokenService.GenerateRefreshTokenValue();
@@ -56,6 +63,34 @@ public sealed class LoginCommandHandler(
         await dbContext.SaveChangesAsync(cancellationToken);
 
         return LoginResult.Succeeded(accessToken.Value, accessToken.ExpiresAtUtc, refreshTokenValue, refreshTokenExpiresAt);
+    }
+
+    private async Task<bool> IsEffectivelyActiveAsync(User user, CancellationToken cancellationToken)
+    {
+        if (!user.IsActive)
+        {
+            return false;
+        }
+
+        if (user.BranchId is { } branchId)
+        {
+            var branch = await dbContext.Branches.FirstOrDefaultAsync(b => b.Id == branchId, cancellationToken);
+            if (branch is null || !branch.IsActive)
+            {
+                return false;
+            }
+        }
+
+        if (user.BrandId is { } brandId)
+        {
+            var brand = await dbContext.Brands.FirstOrDefaultAsync(b => b.Id == brandId, cancellationToken);
+            if (brand is null || !brand.IsActive)
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 }
 

@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Moq;
 using Modules.Identity.Features.Auth.StaffLogin;
+using Modules.Identity.Features.Branches;
+using Modules.Identity.Features.Brands;
 using Modules.Identity.Features.Users;
 using Modules.Identity.Infrastructure;
 using Modules.Identity.Persistence;
@@ -29,11 +31,17 @@ public sealed class StaffLoginCommandHandlerTests
 
         _dbContext = new IdentityDbContext(options);
         var passwordHasher = new PasswordHasher<User>();
-        _branchId = Guid.NewGuid();
 
+        var brand = Brand.Create("Test Brand", FixedUtcNow);
+        var branch = Branch.Create(brand.Id, "Test Branch", FixedUtcNow);
+        _dbContext.Brands.Add(brand);
+        _dbContext.Branches.Add(branch);
+        await _dbContext.SaveChangesAsync();
+
+        _branchId = branch.Id;
         var staff = User.CreateStaff(
             passwordHasher.HashPassword(null!, Pin), "Staff Member",
-            brandId: Guid.NewGuid(), branchId: _branchId, FixedUtcNow);
+            brandId: brand.Id, branchId: branch.Id, FixedUtcNow);
         _staffUserId = staff.Id;
         _dbContext.Users.Add(staff);
         await _dbContext.SaveChangesAsync();
@@ -104,5 +112,36 @@ public sealed class StaffLoginCommandHandlerTests
         dummyHash.Should().NotBeNullOrWhiteSpace();
         passwordHasher.VerifyHashedPassword(dummyUser, dummyHash, "dummy-pin-for-timing-safety")
             .Should().Be(PasswordVerificationResult.Success);
+    }
+
+    [TestMethod]
+    public async Task HandleAsync_WhenStaffUserIsDeactivated_Fails()
+    {
+        var staff = await _dbContext.Users.SingleAsync(u => u.Id == _staffUserId);
+        staff.Deactivate();
+        await _dbContext.SaveChangesAsync();
+
+        var result = await _handler.HandleAsync(new StaffLoginCommand(_branchId, _staffUserId, Pin));
+
+        result.IsSuccess.Should().BeFalse();
+    }
+
+    [TestMethod]
+    public async Task HandleAsync_WhenBranchIsDeactivated_Fails()
+    {
+        var branch = Branch.Create(Guid.NewGuid(), "Downtown", FixedUtcNow);
+        _dbContext.Branches.Add(branch);
+        await _dbContext.SaveChangesAsync();
+        branch.Deactivate();
+        await _dbContext.SaveChangesAsync();
+
+        var passwordHasher = new PasswordHasher<User>();
+        var staff = User.CreateStaff(passwordHasher.HashPassword(null!, Pin), "Other Staff", branch.BrandId, branch.Id, FixedUtcNow);
+        _dbContext.Users.Add(staff);
+        await _dbContext.SaveChangesAsync();
+
+        var result = await _handler.HandleAsync(new StaffLoginCommand(branch.Id, staff.Id, Pin));
+
+        result.IsSuccess.Should().BeFalse();
     }
 }
