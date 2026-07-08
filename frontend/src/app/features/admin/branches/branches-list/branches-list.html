@@ -1,0 +1,23 @@
+<h1>Branches</h1>
+<a [routerLink]="['/admin/brands', brandId, 'branches', 'new']">New Branch</a>
+
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Status</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    @for (branch of branches(); track branch.id) {
+      <tr>
+        <td><a [routerLink]="['/admin/brands', brandId, 'branches', branch.id]">{{ branch.name }}</a></td>
+        <td>{{ branch.isActive ? 'Active' : 'Deactivated' }}</td>
+        <td>
+          <button (click)="toggleActive(branch)">{{ branch.isActive ? 'Deactivate' : 'Reactivate' }}</button>
+        </td>
+      </tr>
+    }
+  </tbody>
+</table>
