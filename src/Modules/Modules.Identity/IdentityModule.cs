@@ -15,7 +15,9 @@ using Modules.Identity.Features.Auth.Refresh;
 using Modules.Identity.Features.Auth.StaffLogin;
 using Modules.Identity.Features.Auth.StaffRoster;
 using Modules.Identity.Features.Brands.CreateBrand;
+using Modules.Identity.Features.Brands.GetBrand;
 using Modules.Identity.Features.Brands.ListBrands;
+using Modules.Identity.Features.Brands.UpdateBrand;
 using Modules.Identity.Features.Users;
 using Modules.Identity.Infrastructure;
 using Modules.Identity.Persistence;
@@ -39,6 +41,8 @@ public static class IdentityModule
         services.AddScoped<LogoutCommandHandler>();
         services.AddScoped<CreateBrandCommandHandler>();
         services.AddScoped<ListBrandsQueryHandler>();
+        services.AddScoped<GetBrandQueryHandler>();
+        services.AddScoped<UpdateBrandCommandHandler>();
 
         services.AddSingleton(jwtOptions);
         services.AddSingleton<IJwtTokenService, JwtTokenService>();
@@ -79,6 +83,8 @@ public static class IdentityModule
         app.MapMe();
         app.MapCreateBrand();
         app.MapListBrands();
+        app.MapGetBrand();
+        app.MapUpdateBrand();
         return app;
     }
 }
