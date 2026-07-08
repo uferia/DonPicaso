@@ -17,6 +17,7 @@ using Modules.Identity.Features.Auth.StaffRoster;
 using Modules.Identity.Features.Branches.CreateBranch;
 using Modules.Identity.Features.Branches.GetBranch;
 using Modules.Identity.Features.Branches.ListBranches;
+using Modules.Identity.Features.Branches.SetBranchActiveState;
 using Modules.Identity.Features.Branches.UpdateBranch;
 using Modules.Identity.Features.Brands.CreateBrand;
 using Modules.Identity.Features.Brands.GetBrand;
@@ -53,6 +54,7 @@ public static class IdentityModule
         services.AddScoped<ListBranchesQueryHandler>();
         services.AddScoped<GetBranchQueryHandler>();
         services.AddScoped<UpdateBranchCommandHandler>();
+        services.AddScoped<SetBranchActiveStateCommandHandler>();
 
         services.AddSingleton(jwtOptions);
         services.AddSingleton<IJwtTokenService, JwtTokenService>();
@@ -101,6 +103,8 @@ public static class IdentityModule
         app.MapListBranches();
         app.MapGetBranch();
         app.MapUpdateBranch();
+        app.MapDeactivateBranch();
+        app.MapReactivateBranch();
         return app;
     }
 }
