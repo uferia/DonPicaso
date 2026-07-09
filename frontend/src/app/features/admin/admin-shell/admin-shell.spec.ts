@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { Router, provideRouter } from '@angular/router';
 
 import { Role } from '../../../core/auth/auth.models';
 import { AuthService } from '../../../core/auth/auth.service';
@@ -32,5 +32,17 @@ describe('AdminShell', () => {
 
     expect(fixture.nativeElement.textContent).not.toContain('Brands');
     expect(fixture.nativeElement.textContent).toContain('Users');
+  });
+
+  it('logs out and navigates to the login page', async () => {
+    const router = TestBed.inject(Router);
+    const navigateSpy = vi.spyOn(router, 'navigateByUrl');
+    const fixture = TestBed.createComponent(AdminShell);
+    fixture.detectChanges();
+
+    (fixture.nativeElement.querySelector('.logout-button') as HTMLButtonElement)!.click();
+    await fixture.whenStable();
+
+    expect(navigateSpy).toHaveBeenCalledWith('/login');
   });
 });

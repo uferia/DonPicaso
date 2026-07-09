@@ -4,3 +4,33 @@
   padding: 1rem;
   border-bottom: 1px solid #ddd;
 }
+
+.admin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.session-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+
+  .current-role {
+    color: #666;
+    font-size: 0.9rem;
+  }
+
+  .logout-button {
+    background: none;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 0.35rem 0.75rem;
+    cursor: pointer;
+
+    &:hover {
+      border-color: #999;
+    }
+  }
+}

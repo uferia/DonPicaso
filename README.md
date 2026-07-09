@@ -19,9 +19,11 @@ src/
   Modules/
     Modules.Identity/          Auth, Brands, Branches, Users, admin CRUD
     Modules.Sales/             Orders
+    Modules.Menu/              Menu catalog (categories, products) read by the POS
 tests/
   Modules.Identity.Tests/
   Modules.Sales.Tests/
+  Modules.Menu.Tests/
 frontend/                      Angular 21 app (admin + POS)
 docs/superpowers/               Design specs and implementation plans
 ```
@@ -32,7 +34,7 @@ Each module is a vertical slice: one folder per Command/Query, with its own Hand
 
 - **Backend:** .NET 10, ASP.NET Core minimal APIs, EF Core + Npgsql, FluentValidation, JWT auth
 - **Database:** PostgreSQL 16
-- **Frontend:** Angular 21 (standalone components, signals, template-driven forms), SCSS, Vitest
+- **Frontend:** Angular 21 (standalone components, signals, template-driven forms), PrimeNG, SCSS, Vitest
 - **Offline sync:** Dexie (IndexedDB) for order capture when the POS tablet is offline
 - **Testing:** MSTest + FluentAssertions + Moq, EF Core `UseInMemoryDatabase` for handler tests
 
@@ -86,7 +88,8 @@ cd frontend && npm test     # frontend unit tests (Vitest)
 - `core/offline/` — Dexie-backed offline order queue and sync service (POS)
 - `features/auth/` — login, staff PIN login, device setup
 - `features/admin/` — nested `/admin` route tree: Brands → Branches → Users, each with list/form pages
-- `features/pos/` — POS ordering UI (placeholder — not yet built out)
+- `features/pos/` — POS ordering screen: product catalog, cart, payment dialog
+- `core/menu/` — brand menu read model with localStorage offline fallback
 
 Route guards gate `/admin` behind `BranchManager`+ and `/pos` behind `Staff`.
 
