@@ -15,8 +15,11 @@ const string PosCorsPolicy = "PosTablets";
 
 builder.Services.AddProblemDetails();
 
-// PaymentMethod (and future enums) cross the wire as strings ("Cash"),
-// matching the Angular payload types.
+// Process-wide: every enum crosses the wire as a string ("Cash", "Staff",
+// ...), matching the Angular payload types. Added for Sales' PaymentMethod,
+// but this also governs Identity's UserRole (and any future enum) since
+// ConfigureHttpJsonOptions applies to all minimal-API JSON binding/output
+// in the host, not just the module that motivated it.
 builder.Services.ConfigureHttpJsonOptions(options =>
     options.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
