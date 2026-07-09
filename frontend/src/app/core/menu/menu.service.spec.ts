@@ -62,4 +62,15 @@ describe('MenuService', () => {
     expect(service.source()).toBe('unavailable');
     expect(service.categories()).toEqual([]);
   });
+
+  it('reports unavailable instead of throwing when the cache entry is corrupted', async () => {
+    localStorage.setItem(MENU_CACHE_KEY, '{not valid json');
+
+    const loadPromise = service.loadMenu();
+    httpMock.expectOne('/api/v1/menu').error(new ProgressEvent('offline'));
+
+    await expect(loadPromise).resolves.toBeUndefined();
+    expect(service.source()).toBe('unavailable');
+    expect(service.categories()).toEqual([]);
+  });
 });

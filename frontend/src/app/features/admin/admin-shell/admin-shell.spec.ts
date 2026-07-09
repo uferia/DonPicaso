@@ -40,7 +40,7 @@ describe('AdminShell', () => {
     const fixture = TestBed.createComponent(AdminShell);
     fixture.detectChanges();
 
-    (fixture.nativeElement.querySelector('.logout-button') as HTMLButtonElement)!.click();
+    (fixture.nativeElement.querySelector('.logout-button') as HTMLButtonElement).click();
     await fixture.whenStable();
 
     expect(navigateSpy).toHaveBeenCalledWith('/login');

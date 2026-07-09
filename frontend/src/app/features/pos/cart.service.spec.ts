@@ -1,5 +1,6 @@
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 
 import { MenuProduct } from '../../core/menu/menu.models';
@@ -41,9 +42,13 @@ describe('CartService', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [CartService, provideHttpClient(), provideHttpClientTesting()],
+      providers: [
+        CartService,
+        { provide: MenuService, useValue: { taxRatePercent: signal(1.5) } },
+        provideHttpClient(),
+        provideHttpClientTesting(),
+      ],
     });
-    TestBed.inject(MenuService).taxRatePercent.set(1.5);
     cart = TestBed.inject(CartService);
   });
 

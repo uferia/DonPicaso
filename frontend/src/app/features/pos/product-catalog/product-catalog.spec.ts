@@ -1,5 +1,6 @@
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 
 import { MenuCategory } from '../../../core/menu/menu.models';
@@ -29,10 +30,14 @@ describe('ProductCatalog', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [ProductCatalog],
-      providers: [CartService, provideHttpClient(), provideHttpClientTesting()],
+      providers: [
+        CartService,
+        { provide: MenuService, useValue: { categories: signal(categories) } },
+        provideHttpClient(),
+        provideHttpClientTesting(),
+      ],
     }).compileComponents();
 
-    TestBed.inject(MenuService).categories.set(categories);
     cart = TestBed.inject(CartService);
   });
 

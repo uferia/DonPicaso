@@ -1,5 +1,6 @@
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { MessageService } from 'primeng/api';
 
@@ -28,12 +29,12 @@ describe('PaymentDialog', () => {
         CartService,
         MessageService,
         { provide: OrderSyncService, useValue: { placeOrder: placeOrderMock } },
+        { provide: MenuService, useValue: { taxRatePercent: signal(1.5) } },
         provideHttpClient(),
         provideHttpClientTesting(),
       ],
     }).compileComponents();
 
-    TestBed.inject(MenuService).taxRatePercent.set(1.5);
     TestBed.inject(AuthService).currentUser.set({
       userId: 'user-1',
       role: Role.Staff,

@@ -1,5 +1,6 @@
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Confirmation, ConfirmationService } from 'primeng/api';
 
@@ -19,12 +20,12 @@ describe('CartPanel', () => {
       providers: [
         CartService,
         ConfirmationService,
+        { provide: MenuService, useValue: { taxRatePercent: signal(1.5) } },
         provideHttpClient(),
         provideHttpClientTesting(),
       ],
     }).compileComponents();
 
-    TestBed.inject(MenuService).taxRatePercent.set(1.5);
     cart = TestBed.inject(CartService);
     confirmationService = TestBed.inject(ConfirmationService);
   });
