@@ -1,0 +1,31 @@
+.payment-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.amount-due {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+
+  strong {
+    font-size: 1.5rem;
+    color: var(--p-primary-600);
+  }
+}
+
+.cash-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.change-due {
+  display: flex;
+  justify-content: space-between;
+
+  &.negative strong {
+    color: var(--p-red-500);
+  }
+}

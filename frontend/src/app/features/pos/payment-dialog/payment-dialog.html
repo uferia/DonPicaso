@@ -1,0 +1,57 @@
+<p-dialog
+  header="Payment"
+  [modal]="true"
+  [visible]="visible()"
+  (visibleChange)="visible.set($event)"
+  [style]="{ width: '24rem' }"
+  (onHide)="close()"
+>
+  <div class="payment-body">
+    <div class="amount-due">
+      <span>Amount due</span>
+      <strong>{{ cart.total() | currency }}</strong>
+    </div>
+
+    <p-selectbutton
+      name="method"
+      [options]="methodOptions"
+      optionLabel="label"
+      optionValue="value"
+      [allowEmpty]="false"
+      [ngModel]="method()"
+      (ngModelChange)="method.set($event)"
+    />
+
+    @if (method() === 'Cash') {
+      <div class="cash-fields">
+        <label for="tendered">Cash tendered</label>
+        <p-inputNumber
+          inputId="tendered"
+          name="tendered"
+          mode="currency"
+          currency="USD"
+          [min]="0"
+          [ngModel]="cashTendered()"
+          (ngModelChange)="cashTendered.set($event)"
+        />
+        @if (changeDue() !== null) {
+          <div class="change-due" [class.negative]="changeDue()! < 0">
+            <span>Change due</span>
+            <strong>{{ changeDue() | currency }}</strong>
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+  <ng-template #footer>
+    <p-button label="Back" [text]="true" (onClick)="close()" />
+    <p-button
+      class="confirm-button"
+      label="Confirm payment"
+      [disabled]="!canConfirm() || isSubmitting()"
+      [loading]="isSubmitting()"
+      (onClick)="confirm()"
+    />
+  </ng-template>
+</p-dialog>

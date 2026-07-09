@@ -11,6 +11,8 @@ export interface OrderItemPayload {
   unitPrice: number;
 }
 
+export type PaymentMethod = 'Cash' | 'Card';
+
 export interface CreateOrderPayload {
   /**
    * Device-generated idempotency key (UUID). Assigned once when the order is
@@ -20,7 +22,15 @@ export interface CreateOrderPayload {
   clientOrderId: string;
   branchId: string;
   brandId: string;
+  subtotal: number;
+  discountPercent: number;
+  discountAmount: number;
+  taxRatePercent: number;
+  taxAmount: number;
   totalAmount: number;
+  paymentMethod: PaymentMethod;
+  cashTendered: number | null;
+  changeDue: number | null;
   items: OrderItemPayload[];
 }
 
