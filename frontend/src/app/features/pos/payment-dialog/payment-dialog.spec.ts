@@ -124,6 +124,25 @@ describe('PaymentDialog', () => {
     expect(cart.lines()).toEqual([]);
   });
 
+  it('shows an error instead of silently ignoring confirm when the session has no branch', async () => {
+    TestBed.inject(AuthService).currentUser.set({
+      userId: 'user-1',
+      role: Role.BrandOwner,
+      brandId: 'brand-1',
+      branchId: null,
+    });
+    const fixture = TestBed.createComponent(PaymentDialog);
+    const component = fixture.componentInstance;
+    component.visible.set(true);
+    component['method'].set('Card');
+
+    await component['confirm']();
+
+    expect(placeOrderMock).not.toHaveBeenCalled();
+    expect(messageAddSpy).toHaveBeenCalledWith(expect.objectContaining({ severity: 'error' }));
+    expect(component.visible()).toBe(true);
+  });
+
   it('keeps the cart intact when the backend rejects the order', async () => {
     placeOrderMock.mockRejectedValue(new Error('400'));
     const fixture = TestBed.createComponent(PaymentDialog);

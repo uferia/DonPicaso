@@ -54,8 +54,20 @@ export class PaymentDialog {
   );
 
   protected async confirm(): Promise<void> {
+    if (!this.canConfirm() || this.isSubmitting()) {
+      return;
+    }
+
     const user = this.authService.currentUser();
-    if (!user?.branchId || !user.brandId || !this.canConfirm() || this.isSubmitting()) {
+    if (!user?.branchId || !user.brandId) {
+      // Belt-and-braces behind branchSessionGuard on the /pos route: if a
+      // session without branch claims still reaches this dialog, say so
+      // instead of swallowing the tap.
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Staff sign-in required',
+        detail: 'Sign in at this register with your PIN to place orders.',
+      });
       return;
     }
 

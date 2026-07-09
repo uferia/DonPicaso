@@ -24,3 +24,15 @@ export function roleGuard(minimumRole: Role): CanActivateFn {
     return router.parseUrl('/login');
   };
 }
+
+/**
+ * The POS needs a branch-scoped session (staff PIN sign-in), not a role
+ * tier: admin roles all outrank Staff so they pass roleGuard, but without
+ * a branchId claim no order can be placed from the register.
+ */
+export const branchSessionGuard: CanActivateFn = () => {
+  const authService = inject(AuthService);
+  const router = inject(Router);
+
+  return authService.currentUser()?.branchId ? true : router.parseUrl('/staff-login');
+};

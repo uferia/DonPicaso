@@ -1,6 +1,6 @@
 import { Routes } from '@angular/router';
 
-import { roleGuard } from './core/auth/auth.guard';
+import { branchSessionGuard, roleGuard } from './core/auth/auth.guard';
 import { Role } from './core/auth/auth.models';
 import { DeviceSetup } from './features/auth/device-setup/device-setup';
 import { Login } from './features/auth/login/login';
@@ -60,7 +60,7 @@ export const routes: Routes = [
   },
   {
     path: 'pos',
-    canActivate: [roleGuard(Role.Staff)],
+    canActivate: [branchSessionGuard],
     loadComponent: () => import('./features/pos/pos-shell/pos-shell').then((m) => m.PosShell),
   },
 ];
