@@ -1,9 +1,11 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 
 import { MenuResponse } from '../../../core/menu/menu.models';
+import { OrderSyncService } from '../../../core/offline/order-sync.service';
 import { PosShell } from './pos-shell';
 
 const sampleMenu: MenuResponse = {
@@ -25,7 +27,14 @@ describe('PosShell', () => {
     localStorage.clear();
     await TestBed.configureTestingModule({
       imports: [PosShell],
-      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideRouter([]),
+        // Stub the root OrderSyncService: its constructor touches IndexedDB,
+        // which jsdom lacks — same pattern as payment-dialog.spec.ts.
+        { provide: OrderSyncService, useValue: { isOnline: signal(true), pendingCount: signal(0) } },
+      ],
     }).compileComponents();
 
     httpMock = TestBed.inject(HttpTestingController);
