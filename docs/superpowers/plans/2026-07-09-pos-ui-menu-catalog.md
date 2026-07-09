@@ -3695,7 +3695,7 @@ Add to `frontend/src/app/features/admin/admin-shell/admin-shell.spec.ts` (inside
     const fixture = TestBed.createComponent(AdminShell);
     fixture.detectChanges();
 
-    fixture.nativeElement.querySelector<HTMLButtonElement>('.logout-button')!.click();
+    (fixture.nativeElement.querySelector('.logout-button') as HTMLButtonElement)!.click();
     await fixture.whenStable();
 
     expect(navigateSpy).toHaveBeenCalledWith('/login');
@@ -3733,7 +3733,11 @@ export class AdminShell {
 
   protected async logout(): Promise<void> {
     await this.authService.logout();
-    await this.router.navigateByUrl('/login');
+    // Not awaited: in tests (and any router config missing '/login')
+    // navigateByUrl's promise rejects on no-match, which would otherwise
+    // propagate out of this method. Matches the existing pattern in
+    // staff-login.ts and pos-shell.ts for the same reason.
+    void this.router.navigateByUrl('/login');
   }
 }
 ```
