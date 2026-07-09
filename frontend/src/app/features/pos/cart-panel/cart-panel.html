@@ -1,0 +1,82 @@
+<aside class="cart-panel">
+  <h2>Checkout</h2>
+
+  <div class="cart-lines">
+    @for (line of cart.lines(); track line.product.id) {
+      <div class="cart-line">
+        <p-button
+          icon="pi pi-trash"
+          [text]="true"
+          severity="danger"
+          ariaLabel="Remove item"
+          (onClick)="cart.remove(line.product.id)"
+        />
+        <span class="line-name">{{ line.product.name }}</span>
+        <span class="line-stepper">
+          <p-button
+            icon="pi pi-minus"
+            [rounded]="true"
+            [outlined]="true"
+            ariaLabel="Decrease quantity"
+            (onClick)="cart.decrement(line.product.id)"
+          />
+          <span class="line-quantity">{{ line.quantity }}</span>
+          <p-button
+            icon="pi pi-plus"
+            [rounded]="true"
+            [outlined]="true"
+            ariaLabel="Increase quantity"
+            (onClick)="cart.increment(line.product.id)"
+          />
+        </span>
+        <span class="line-total">{{ line.quantity * line.product.price | currency }}</span>
+      </div>
+    } @empty {
+      <p class="empty-cart">Tap items to add them to the order.</p>
+    }
+  </div>
+
+  <div class="cart-summary">
+    <div class="summary-row">
+      <label for="discount">Discount (%)</label>
+      <p-inputNumber
+        inputId="discount"
+        name="discount"
+        [min]="0"
+        [max]="100"
+        [ngModel]="cart.discountPercent()"
+        (ngModelChange)="cart.setDiscountPercent($event ?? 0)"
+      />
+    </div>
+    <div class="summary-row">
+      <span>Sub Total</span>
+      <span>{{ cart.subtotal() | currency }}</span>
+    </div>
+    <div class="summary-row">
+      <span>Discount</span>
+      <span>-{{ cart.discountAmount() | currency }}</span>
+    </div>
+    <div class="summary-row">
+      <span>Tax</span>
+      <span>{{ cart.taxAmount() | currency }}</span>
+    </div>
+    <div class="summary-row total-row">
+      <span>Total</span>
+      <span>{{ cart.total() | currency }}</span>
+    </div>
+  </div>
+
+  <div class="cart-actions">
+    <p-button
+      class="cancel-button"
+      label="Cancel Order"
+      severity="danger"
+      [outlined]="true"
+      [disabled]="cart.lines().length === 0"
+      (onClick)="cancelOrder()"
+    />
+    <p-button class="pay-button" [disabled]="cart.lines().length === 0" (onClick)="pay.emit()">
+      Pay ({{ cart.total() | currency }})
+    </p-button>
+  </div>
+</aside>
