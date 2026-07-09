@@ -1,1 +1,10 @@
 /* You can add global styles to this file, and also import other style files */
+
+body {
+  margin: 0;
+  font-family: 'Inter Variable', system-ui, 'Segoe UI', sans-serif;
+
+  // A register reads numbers all day: tabular figures keep prices and
+  // totals from shifting width as digits change.
+  font-variant-numeric: tabular-nums;
+}
