@@ -148,4 +148,79 @@ public sealed class CreateOrderCommandValidatorTests
         _validator.Validate(command).Errors
             .Should().Contain(e => e.PropertyName == nameof(CreateOrderCommand.DiscountPercent));
     }
+
+    [TestMethod]
+    public void Validate_TaxRatePercentAboveRange_Fails()
+    {
+        var command = BuildValidCashCommand() with { TaxRatePercent = 101m };
+
+        _validator.Validate(command).Errors
+            .Should().Contain(e => e.PropertyName == nameof(CreateOrderCommand.TaxRatePercent));
+    }
+
+    [TestMethod]
+    public void Validate_TaxRatePercentBelowRange_Fails()
+    {
+        var command = BuildValidCashCommand() with { TaxRatePercent = -1m };
+
+        _validator.Validate(command).Errors
+            .Should().Contain(e => e.PropertyName == nameof(CreateOrderCommand.TaxRatePercent));
+    }
+
+    // Client/server rounding lockstep: 145.00 * 1.5% = 2.175, an exact
+    // decimal midpoint that IEEE-754 doubles store slightly low (as
+    // 2.17499999999999982). The client's roundMoney() (cart.service.ts) and
+    // this validator's RoundMoney() must both round it AWAY from zero to
+    // 2.18, not down to 2.17 — otherwise a $145 order at the default 1.5%
+    // tax rate is rejected. Same literal figures as
+    // cart.service.spec.ts's "matches the server on exact-decimal
+    // midpoints" test, so the lockstep is documented by symmetry.
+    [TestMethod]
+    public void Validate_WithHalfCentMidpointTaxAmount_Passes()
+    {
+        var command = new CreateOrderCommand(
+            ClientOrderId: Guid.NewGuid(),
+            BranchId: Guid.NewGuid(),
+            BrandId: Guid.NewGuid(),
+            Subtotal: 145.00m,
+            DiscountPercent: 0m,
+            DiscountAmount: 0m,
+            TaxRatePercent: 1.5m,
+            TaxAmount: 2.18m,
+            TotalAmount: 147.18m,
+            PaymentMethod: PaymentMethod.Cash,
+            CashTendered: 150.00m,
+            ChangeDue: 2.82m,
+            Items:
+            [
+                new OrderItemDto(Guid.NewGuid(), "Family Platter", Quantity: 2, UnitPrice: 72.50m),
+            ]);
+
+        _validator.Validate(command).IsValid.Should().BeTrue();
+    }
+
+    [TestMethod]
+    public void Validate_WithHalfCentMidpointTaxAmountRoundedDown_Fails()
+    {
+        var command = new CreateOrderCommand(
+            ClientOrderId: Guid.NewGuid(),
+            BranchId: Guid.NewGuid(),
+            BrandId: Guid.NewGuid(),
+            Subtotal: 145.00m,
+            DiscountPercent: 0m,
+            DiscountAmount: 0m,
+            TaxRatePercent: 1.5m,
+            TaxAmount: 2.17m,
+            TotalAmount: 147.17m,
+            PaymentMethod: PaymentMethod.Cash,
+            CashTendered: 150.00m,
+            ChangeDue: 2.82m,
+            Items:
+            [
+                new OrderItemDto(Guid.NewGuid(), "Family Platter", Quantity: 2, UnitPrice: 72.50m),
+            ]);
+
+        _validator.Validate(command).Errors
+            .Should().Contain(e => e.PropertyName == nameof(CreateOrderCommand.TaxAmount));
+    }
 }

@@ -15,7 +15,7 @@
 - Backend package versions (match existing csproj files exactly): `Microsoft.EntityFrameworkCore` 10.0.9, `Npgsql.EntityFrameworkCore.PostgreSQL` 10.0.2, `FluentValidation.DependencyInjectionExtensions` 12.1.1, `FluentAssertions` 6.12.2, `Moq` 4.20.72, `MSTest` 4.0.2, `Microsoft.EntityFrameworkCore.InMemory` 10.0.9. Target `net10.0`.
 - Database: explicit snake_case column/table/index names, one schema per module (`menu` for the new module), `numeric(12,2)` for money, `numeric(5,2)` for percentages, `timestamptz` for timestamps.
 - All API routes are prefixed `/api/v1`.
-- Rounding rule (spec): **half-up to 2 decimals** — C#: `Math.Round(value, 2, MidpointRounding.AwayFromZero)`; TypeScript: `Math.round((value + Number.EPSILON) * 100) / 100`. Applied identically on both sides so client-computed orders always pass server validation.
+- Rounding rule (spec): **half-up (away from zero) to 2 decimals** — C#: `Math.Round(value, 2, MidpointRounding.AwayFromZero)`; TypeScript: `(Math.sign(value) * Math.round((Math.abs(value) + 1e-9) * 100)) / 100`. The absolute 1e-9 nudge (not `Number.EPSILON`, which is relative to 1.0 and too small to bridge float error at dollar magnitudes) lifts exact midpoints without crossing a boundary from a genuinely lower value. Applied identically on both sides so client-computed orders always pass server validation.
 - Menu tax rate comes from configuration key `Menu:TaxRatePercent` (value `1.5` in dev appsettings), never per-branch.
 - Commits: plain imperative messages matching repo history (e.g. "Add Modules.Menu catalog module"), **no `Co-Authored-By` trailer ever** (CLAUDE.md rule).
 - Frontend: standalone components, signals, template-driven forms (`FormsModule`), SCSS files per component, Prettier printWidth 100 / singleQuote.
@@ -1817,11 +1817,19 @@ export interface CartLine {
 }
 
 /**
- * Half-up to 2 decimals — must stay in lockstep with RoundMoney() in
- * CreateOrderCommandValidator, which re-derives and rejects drifted math.
+ * Half-up (away from zero) to 2 decimals — must stay in lockstep with
+ * RoundMoney() in CreateOrderCommandValidator, which re-derives and rejects
+ * drifted math. Money inputs are 2-dp amounts times 2-dp percents (at most
+ * 6 decimal places), so any true non-midpoint value sits >= 1e-6 from a
+ * half-cent boundary while binary representation error is far below 1e-9 at
+ * POS magnitudes. The absolute 1e-9 nudge therefore lifts exact midpoints
+ * (which floats store slightly low, e.g. 2.175 -> 2.17499999999999982)
+ * without ever crossing a boundary from a genuinely lower value.
+ * (Number.EPSILON was previously used here; it is relative to 1.0 and far
+ * too small to bridge float error at dollar magnitudes.)
  */
 export function roundMoney(value: number): number {
-  return Math.round((value + Number.EPSILON) * 100) / 100;
+  return (Math.sign(value) * Math.round((Math.abs(value) + 1e-9) * 100)) / 100;
 }
 
 /**

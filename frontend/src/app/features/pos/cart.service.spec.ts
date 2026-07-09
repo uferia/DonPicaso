@@ -16,6 +16,24 @@ describe('roundMoney', () => {
     expect(roundMoney(1.235)).toBe(1.24);
     expect(roundMoney(23.970000000000002)).toBe(23.97);
   });
+
+  it('matches the server on exact-decimal midpoints that float representation stores low', () => {
+    // These vectors previously diverged from the server's decimal
+    // Math.Round(value, 2, MidpointRounding.AwayFromZero): Number.EPSILON
+    // (relative to 1.0) could not bridge float error at dollar magnitudes,
+    // so the client rounded down while the server rounded up.
+    expect(roundMoney(145 * 0.015)).toBe(2.18);
+    expect(roundMoney(4.27 * 0.5)).toBe(2.14);
+    expect(roundMoney(2.175)).toBe(2.18);
+    expect(roundMoney(1.225)).toBe(1.23);
+    expect(roundMoney(1.235)).toBe(1.24);
+    expect(roundMoney(0)).toBe(0);
+    expect(roundMoney(-2.175)).toBe(-2.18);
+  });
+
+  it('does not nudge a genuine non-midpoint value across a half-cent boundary', () => {
+    expect(roundMoney(2.174985)).toBe(2.17);
+  });
 });
 
 describe('CartService', () => {

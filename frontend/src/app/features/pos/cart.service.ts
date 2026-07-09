@@ -9,11 +9,19 @@ export interface CartLine {
 }
 
 /**
- * Half-up to 2 decimals — must stay in lockstep with RoundMoney() in
- * CreateOrderCommandValidator, which re-derives and rejects drifted math.
+ * Half-up (away from zero) to 2 decimals — must stay in lockstep with
+ * RoundMoney() in CreateOrderCommandValidator, which re-derives and rejects
+ * drifted math. Money inputs are 2-dp amounts times 2-dp percents (at most
+ * 6 decimal places), so any true non-midpoint value sits >= 1e-6 from a
+ * half-cent boundary while binary representation error is far below 1e-9 at
+ * POS magnitudes. The absolute 1e-9 nudge therefore lifts exact midpoints
+ * (which floats store slightly low, e.g. 2.175 -> 2.17499999999999982)
+ * without ever crossing a boundary from a genuinely lower value.
+ * (Number.EPSILON was previously used here; it is relative to 1.0 and far
+ * too small to bridge float error at dollar magnitudes.)
  */
 export function roundMoney(value: number): number {
-  return Math.round((value + Number.EPSILON) * 100) / 100;
+  return (Math.sign(value) * Math.round((Math.abs(value) + 1e-9) * 100)) / 100;
 }
 
 /**
