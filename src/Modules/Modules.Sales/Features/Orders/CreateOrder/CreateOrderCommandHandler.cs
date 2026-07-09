@@ -36,7 +36,15 @@ public sealed class CreateOrderCommandHandler(
             command.ClientOrderId,
             command.BranchId,
             command.BrandId,
+            command.Subtotal,
+            command.DiscountPercent,
+            command.DiscountAmount,
+            command.TaxRatePercent,
+            command.TaxAmount,
             command.TotalAmount,
+            command.PaymentMethod,
+            command.CashTendered,
+            command.ChangeDue,
             command.Items.Select(i => OrderItem.Create(i.ProductId, i.ProductName, i.Quantity, i.UnitPrice)),
             timeProvider.GetUtcNow());
 

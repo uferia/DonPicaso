@@ -1,6 +1,7 @@
 using FluentAssertions;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
+using Modules.Sales.Features.Orders;
 using Modules.Sales.Features.Orders.CreateOrder;
 using Modules.Sales.Persistence;
 using Moq;
@@ -56,10 +57,18 @@ public sealed class CreateOrderCommandHandlerTests
         savedOrder.ClientOrderId.Should().Be(command.ClientOrderId);
         savedOrder.BranchId.Should().Be(command.BranchId);
         savedOrder.BrandId.Should().Be(command.BrandId);
-        savedOrder.TotalAmount.Should().Be(35.00m);
+        savedOrder.Subtotal.Should().Be(35.00m);
+        savedOrder.DiscountPercent.Should().Be(10m);
+        savedOrder.DiscountAmount.Should().Be(3.50m);
+        savedOrder.TaxRatePercent.Should().Be(1.5m);
+        savedOrder.TaxAmount.Should().Be(0.47m);
+        savedOrder.TotalAmount.Should().Be(31.97m);
+        savedOrder.PaymentMethod.Should().Be(PaymentMethod.Cash);
+        savedOrder.CashTendered.Should().Be(40.00m);
+        savedOrder.ChangeDue.Should().Be(8.03m);
+        savedOrder.Items.Sum(i => i.LineTotal).Should().Be(savedOrder.Subtotal);
         savedOrder.CreatedAtUtc.Should().Be(FixedUtcNow);
         savedOrder.Items.Should().HaveCount(2);
-        savedOrder.Items.Sum(i => i.LineTotal).Should().Be(savedOrder.TotalAmount);
 
         _timeProviderMock.Verify(t => t.GetUtcNow(), Times.Once);
     }
@@ -80,14 +89,14 @@ public sealed class CreateOrderCommandHandlerTests
     }
 
     [TestMethod]
-    public async Task HandleAsync_WhenTotalDoesNotMatchItems_ThrowsValidationExceptionAndSavesNothing()
+    public async Task HandleAsync_WhenSubtotalDoesNotMatchItems_ThrowsValidationExceptionAndSavesNothing()
     {
-        var command = BuildValidCommand() with { TotalAmount = 99.99m };
+        var command = BuildValidCommand() with { Subtotal = 99.99m };
 
         var act = () => _handler.HandleAsync(command, CancellationToken.None);
 
         (await act.Should().ThrowAsync<ValidationException>())
-            .Which.Errors.Should().Contain(e => e.PropertyName == nameof(CreateOrderCommand.TotalAmount));
+            .Which.Errors.Should().Contain(e => e.PropertyName == nameof(CreateOrderCommand.Subtotal));
 
         (await _dbContext.Orders.AnyAsync()).Should().BeFalse();
     }
@@ -95,12 +104,11 @@ public sealed class CreateOrderCommandHandlerTests
     [TestMethod]
     public async Task HandleAsync_WithEmptyBranchAndNonPositiveQuantity_ThrowsValidationException()
     {
-        var command = new CreateOrderCommand(
-            ClientOrderId: Guid.NewGuid(),
-            BranchId: Guid.Empty,
-            BrandId: Guid.NewGuid(),
-            TotalAmount: 10.00m,
-            Items: [new OrderItemDto(Guid.NewGuid(), "Quattro Formaggi", Quantity: 0, UnitPrice: 10.00m)]);
+        var command = BuildValidCommand() with
+        {
+            BranchId = Guid.Empty,
+            Items = [new OrderItemDto(Guid.NewGuid(), "Quattro Formaggi", Quantity: 0, UnitPrice: 10.00m)],
+        };
 
         var act = () => _handler.HandleAsync(command, CancellationToken.None);
 
@@ -119,7 +127,15 @@ public sealed class CreateOrderCommandHandlerTests
             ClientOrderId: Guid.NewGuid(),
             BranchId: Guid.NewGuid(),
             BrandId: Guid.NewGuid(),
-            TotalAmount: 35.00m,
+            Subtotal: 35.00m,
+            DiscountPercent: 10m,
+            DiscountAmount: 3.50m,
+            TaxRatePercent: 1.5m,
+            TaxAmount: 0.47m,
+            TotalAmount: 31.97m,
+            PaymentMethod: PaymentMethod.Cash,
+            CashTendered: 40.00m,
+            ChangeDue: 8.03m,
             Items:
             [
                 new OrderItemDto(Guid.NewGuid(), "Margherita Pizza", Quantity: 2, UnitPrice: 12.50m),

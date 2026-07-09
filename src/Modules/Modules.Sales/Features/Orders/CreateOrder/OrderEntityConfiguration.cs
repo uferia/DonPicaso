@@ -37,6 +37,45 @@ internal sealed class OrderEntityConfiguration : IEntityTypeConfiguration<Order>
             .HasColumnType("numeric(12,2)")
             .IsRequired();
 
+        builder.Property(o => o.Subtotal)
+            .HasColumnName("subtotal")
+            .HasColumnType("numeric(12,2)")
+            .IsRequired();
+
+        builder.Property(o => o.DiscountPercent)
+            .HasColumnName("discount_percent")
+            .HasColumnType("numeric(5,2)")
+            .IsRequired();
+
+        builder.Property(o => o.DiscountAmount)
+            .HasColumnName("discount_amount")
+            .HasColumnType("numeric(12,2)")
+            .IsRequired();
+
+        builder.Property(o => o.TaxRatePercent)
+            .HasColumnName("tax_rate_percent")
+            .HasColumnType("numeric(5,2)")
+            .IsRequired();
+
+        builder.Property(o => o.TaxAmount)
+            .HasColumnName("tax_amount")
+            .HasColumnType("numeric(12,2)")
+            .IsRequired();
+
+        builder.Property(o => o.PaymentMethod)
+            .HasColumnName("payment_method")
+            .HasConversion<string>()
+            .HasMaxLength(20)
+            .IsRequired();
+
+        builder.Property(o => o.CashTendered)
+            .HasColumnName("cash_tendered")
+            .HasColumnType("numeric(12,2)");
+
+        builder.Property(o => o.ChangeDue)
+            .HasColumnName("change_due")
+            .HasColumnType("numeric(12,2)");
+
         builder.Property(o => o.CreatedAtUtc)
             .HasColumnName("created_at_utc")
             .HasColumnType("timestamptz")

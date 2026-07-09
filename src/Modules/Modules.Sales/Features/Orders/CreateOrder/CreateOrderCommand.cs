@@ -11,7 +11,15 @@ public sealed record CreateOrderCommand(
     Guid ClientOrderId,
     Guid BranchId,
     Guid BrandId,
+    decimal Subtotal,
+    decimal DiscountPercent,
+    decimal DiscountAmount,
+    decimal TaxRatePercent,
+    decimal TaxAmount,
     decimal TotalAmount,
+    PaymentMethod PaymentMethod,
+    decimal? CashTendered,
+    decimal? ChangeDue,
     IReadOnlyList<OrderItemDto> Items);
 
 public sealed record OrderItemDto(

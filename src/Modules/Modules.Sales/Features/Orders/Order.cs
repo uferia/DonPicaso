@@ -22,6 +22,22 @@ public sealed class Order
 
     public decimal TotalAmount { get; private set; }
 
+    public decimal Subtotal { get; private set; }
+
+    public decimal DiscountPercent { get; private set; }
+
+    public decimal DiscountAmount { get; private set; }
+
+    public decimal TaxRatePercent { get; private set; }
+
+    public decimal TaxAmount { get; private set; }
+
+    public PaymentMethod PaymentMethod { get; private set; }
+
+    public decimal? CashTendered { get; private set; }
+
+    public decimal? ChangeDue { get; private set; }
+
     public DateTimeOffset CreatedAtUtc { get; private set; }
 
     public IReadOnlyCollection<OrderItem> Items => _items.AsReadOnly();
@@ -35,7 +51,15 @@ public sealed class Order
         Guid clientOrderId,
         Guid branchId,
         Guid brandId,
+        decimal subtotal,
+        decimal discountPercent,
+        decimal discountAmount,
+        decimal taxRatePercent,
+        decimal taxAmount,
         decimal totalAmount,
+        PaymentMethod paymentMethod,
+        decimal? cashTendered,
+        decimal? changeDue,
         IEnumerable<OrderItem> items,
         DateTimeOffset createdAtUtc)
     {
@@ -45,7 +69,15 @@ public sealed class Order
             ClientOrderId = clientOrderId,
             BranchId = branchId,
             BrandId = brandId,
+            Subtotal = subtotal,
+            DiscountPercent = discountPercent,
+            DiscountAmount = discountAmount,
+            TaxRatePercent = taxRatePercent,
+            TaxAmount = taxAmount,
             TotalAmount = totalAmount,
+            PaymentMethod = paymentMethod,
+            CashTendered = cashTendered,
+            ChangeDue = changeDue,
             CreatedAtUtc = createdAtUtc,
         };
 

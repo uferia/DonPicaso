@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Modules.Identity;
@@ -13,6 +14,12 @@ var builder = WebApplication.CreateBuilder(args);
 const string PosCorsPolicy = "PosTablets";
 
 builder.Services.AddProblemDetails();
+
+// PaymentMethod (and future enums) cross the wire as strings ("Cash"),
+// matching the Angular payload types.
+builder.Services.ConfigureHttpJsonOptions(options =>
+    options.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
+
 builder.Services.AddOpenApi();
 
 // The Capacitor WebView serves the Angular bundle from its own origin
