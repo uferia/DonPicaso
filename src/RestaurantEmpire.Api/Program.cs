@@ -1,9 +1,11 @@
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Modules.Identity;
 using Modules.Identity.Features.Users;
 using Modules.Identity.Infrastructure;
 using Modules.Identity.Persistence;
 using Modules.Menu;
+using Modules.Menu.Persistence;
 using Modules.Sales;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -56,6 +58,15 @@ if (app.Environment.IsDevelopment())
         seedScope.ServiceProvider.GetRequiredService<IdentityDbContext>(),
         seedScope.ServiceProvider.GetRequiredService<IPasswordHasher<User>>(),
         TimeProvider.System);
+
+    // The menu seeder needs the seeded brand's id. Only the host may bridge
+    // the two modules' contexts — they never reference each other.
+    var seedBrandId = await seedScope.ServiceProvider.GetRequiredService<IdentityDbContext>()
+        .Brands.Select(b => b.Id).FirstAsync();
+
+    await MenuSeeder.SeedAsync(
+        seedScope.ServiceProvider.GetRequiredService<MenuDbContext>(),
+        seedBrandId);
 }
 
 app.MapSalesModule();
