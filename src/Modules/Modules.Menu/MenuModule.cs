@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Modules.Menu.Features.Catalog.GetMenu;
 using Modules.Menu.Persistence;
 
 namespace Modules.Menu;
@@ -16,12 +17,15 @@ public static class MenuModule
     {
         services.AddDbContext<MenuDbContext>(o => o.UseNpgsql(connectionString));
         services.AddSingleton(options);
+        services.AddScoped<GetMenuQueryHandler>();
 
         return services;
     }
 
     public static IEndpointRouteBuilder MapMenuModule(this IEndpointRouteBuilder app)
     {
+        app.MapGetMenu();
+
         return app;
     }
 }
