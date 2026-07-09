@@ -1,19 +1,38 @@
-<form class="login-form" (ngSubmit)="submit()">
-  <h1>Sign in</h1>
+<div class="login-page">
+  <form class="login-card" (ngSubmit)="submit()">
+    <div class="brand-mark">
+      <i class="pi pi-shop"></i>
+    </div>
+    <h1>Don Picaso</h1>
+    <p class="subtitle">Sign in to manage your restaurants</p>
 
-  <label>
-    Email
-    <input type="email" name="email" [(ngModel)]="email" required autocomplete="username" />
-  </label>
+    <label for="email">Email</label>
+    <input
+      pInputText
+      id="email"
+      type="email"
+      name="email"
+      [(ngModel)]="email"
+      required
+      autocomplete="username"
+    />
 
-  <label>
-    Password
-    <input type="password" name="password" [(ngModel)]="password" required autocomplete="current-password" />
-  </label>
+    <label for="password">Password</label>
+    <p-password
+      inputId="password"
+      name="password"
+      [(ngModel)]="password"
+      [feedback]="false"
+      [toggleMask]="true"
+      [fluid]="true"
+      autocomplete="current-password"
+      required
+    />
 
-  @if (errorMessage()) {
-    <p class="error">{{ errorMessage() }}</p>
-  }
+    @if (errorMessage()) {
+      <p-message severity="error">{{ errorMessage() }}</p-message>
+    }
 
-  <button type="submit" [disabled]="isSubmitting()">Sign in</button>
-</form>
+    <p-button type="submit" label="Sign in" [loading]="isSubmitting()" [fluid]="true" />
+  </form>
+</div>

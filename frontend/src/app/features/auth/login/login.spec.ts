@@ -59,4 +59,13 @@ describe('Login', () => {
 
     expect(component['errorMessage']()).toBe('Invalid email or password.');
   });
+
+  it('renders the PrimeNG login card', () => {
+    const fixture = TestBed.createComponent(Login);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('.login-card')).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('p-password')).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('.login-card p-button button')).toBeTruthy();
+  });
 });
