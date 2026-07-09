@@ -1,0 +1,43 @@
+<div class="catalog">
+  <div class="search-bar">
+    <i class="pi pi-search"></i>
+    <input
+      pInputText
+      type="text"
+      name="search"
+      placeholder="Search items here..."
+      [ngModel]="searchTerm()"
+      (ngModelChange)="searchTerm.set($event)"
+    />
+  </div>
+
+  <div class="product-grid">
+    @for (product of filteredProducts(); track product.id) {
+      <button type="button" class="product-tile" (click)="cart.add(product)">
+        @if (product.imageUrl) {
+          <img [src]="product.imageUrl" [alt]="product.name" />
+        } @else {
+          <span class="tile-placeholder">{{ initials(product.name) }}</span>
+        }
+        <span class="tile-name">{{ product.name }}</span>
+        <span class="tile-price">{{ product.price | currency }}</span>
+      </button>
+    } @empty {
+      <p class="no-results">No items match your search.</p>
+    }
+  </div>
+
+  <nav class="category-tabs">
+    @for (category of menu.categories(); track category.id) {
+      <button
+        type="button"
+        class="category-tab"
+        [class.active]="category.id === selectedCategory()?.id"
+        (click)="selectedCategoryId.set(category.id); searchTerm.set('')"
+      >
+        <i class="pi pi-tag"></i>
+        <span>{{ category.name }}</span>
+      </button>
+    }
+  </nav>
+</div>
