@@ -3,6 +3,7 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { InputTextModule } from 'primeng/inputtext';
 
+import { MenuCategory } from '../../../core/menu/menu.models';
 import { MenuService } from '../../../core/menu/menu.service';
 import { CartService } from '../cart.service';
 
@@ -19,7 +20,7 @@ export class ProductCatalog {
   protected readonly searchTerm = signal('');
   protected readonly selectedCategoryId = signal<string | null>(null);
 
-  protected readonly selectedCategory = computed(() => {
+  protected readonly selectedCategory = computed<MenuCategory | null>(() => {
     const categories = this.menu.categories();
     return categories.find((c) => c.id === this.selectedCategoryId()) ?? categories[0] ?? null;
   });
