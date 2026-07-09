@@ -1,27 +1,45 @@
-@if (!selectedMember()) {
-  <div class="roster">
-    <h1>Who's working?</h1>
-    @for (member of roster(); track member.userId) {
-      <button type="button" class="roster-member" (click)="selectMember(member)">
-        {{ member.displayName }}
-      </button>
-    }
-  </div>
-} @else {
-  <div class="pin-pad">
-    <h1>{{ selectedMember()!.displayName }}</h1>
-    <p class="pin-dots">{{ pin().padEnd(4, '•').split('').join(' ') }}</p>
-
-    @if (errorMessage()) {
-      <p class="error">{{ errorMessage() }}</p>
-    }
-
-    <div class="digits">
-      @for (digit of digits; track digit) {
-        <button type="button" (click)="pressDigit(digit)">{{ digit }}</button>
-      }
+<div class="staff-login-page">
+  @if (!selectedMember()) {
+    <div class="panel roster">
+      <h1>Who's working?</h1>
+      <div class="roster-grid">
+        @for (member of roster(); track member.userId) {
+          <button type="button" class="roster-member" (click)="selectMember(member)">
+            <span class="avatar">{{ member.displayName.charAt(0).toUpperCase() }}</span>
+            <span>{{ member.displayName }}</span>
+          </button>
+        }
+      </div>
     </div>
+  } @else {
+    <div class="panel pin-pad">
+      <h1>{{ selectedMember()!.displayName }}</h1>
+      <p class="pin-dots">{{ pin().padEnd(4, '•').split('').join(' ') }}</p>
 
-    <button type="button" [disabled]="pin().length < 4" (click)="submitPin()">Enter</button>
-  </div>
-}
+      @if (errorMessage()) {
+        <p-message severity="error">{{ errorMessage() }}</p-message>
+      }
+
+      <div class="digits">
+        @for (digit of digits; track digit) {
+          <p-button
+            class="digit"
+            [label]="digit"
+            [rounded]="true"
+            [outlined]="true"
+            size="large"
+            (onClick)="pressDigit(digit)"
+          />
+        }
+      </div>
+
+      <p-button
+        class="enter-button"
+        label="Enter"
+        [fluid]="true"
+        [disabled]="pin().length < 4"
+        (onClick)="submitPin()"
+      />
+    </div>
+  }
+</div>

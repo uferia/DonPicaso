@@ -3,6 +3,9 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 
+import { ButtonModule } from 'primeng/button';
+import { MessageModule } from 'primeng/message';
+
 import { StaffRosterMember } from '../../../core/auth/auth.models';
 import { AuthService } from '../../../core/auth/auth.service';
 import { DEVICE_BRANCH_ID_STORAGE_KEY } from '../device-setup/device-setup';
@@ -11,6 +14,7 @@ import { DEVICE_BRANCH_ID_STORAGE_KEY } from '../device-setup/device-setup';
   selector: 'app-staff-login',
   templateUrl: './staff-login.html',
   styleUrl: './staff-login.scss',
+  imports: [ButtonModule, MessageModule],
 })
 export class StaffLogin implements OnInit {
   private readonly http = inject(HttpClient);
