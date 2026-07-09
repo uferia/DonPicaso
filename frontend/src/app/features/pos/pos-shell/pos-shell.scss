@@ -1,0 +1,59 @@
+.pos-layout {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: var(--p-surface-100);
+}
+
+.pos-topbar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem 1rem;
+  background: var(--p-primary-600);
+  color: #fff;
+
+  .brand-name {
+    font-size: 1.15rem;
+    font-weight: 700;
+    flex: 1;
+  }
+
+  .offline-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 999px;
+    background: rgb(0 0 0 / 25%);
+    font-size: 0.85rem;
+  }
+
+  .logout-button ::ng-deep button {
+    color: #fff;
+  }
+}
+
+.pos-main {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.menu-unavailable {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  color: var(--p-surface-600);
+
+  i {
+    font-size: 3rem;
+    color: var(--p-primary-500);
+  }
+}

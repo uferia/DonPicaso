@@ -61,6 +61,6 @@ export const routes: Routes = [
   {
     path: 'pos',
     canActivate: [roleGuard(Role.Staff)],
-    loadComponent: () => import('./features/pos/pos-placeholder').then((m) => m.PosPlaceholder),
+    loadComponent: () => import('./features/pos/pos-shell/pos-shell').then((m) => m.PosShell),
   },
 ];

@@ -1,0 +1,41 @@
+<p-toast position="top-center" />
+<p-confirmdialog />
+
+<div class="pos-layout">
+  <header class="pos-topbar">
+    <span class="brand-name">Don Picaso POS</span>
+
+    @if (!orderSync.isOnline() || orderSync.pendingCount() > 0 || menu.source() === 'cache') {
+      <span class="offline-badge">
+        <i class="pi pi-wifi"></i>
+        Offline
+        @if (orderSync.pendingCount() > 0) {
+          — {{ orderSync.pendingCount() }} queued
+        }
+      </span>
+    }
+
+    <p-button
+      class="logout-button"
+      label="Logout"
+      icon="pi pi-sign-out"
+      [text]="true"
+      (onClick)="logout()"
+    />
+  </header>
+
+  @if (menu.source() === 'unavailable') {
+    <div class="menu-unavailable">
+      <i class="pi pi-exclamation-circle"></i>
+      <p>Couldn't load the menu. Check the connection and try again.</p>
+      <p-button label="Retry" icon="pi pi-refresh" (onClick)="retry()" />
+    </div>
+  } @else {
+    <main class="pos-main">
+      <app-product-catalog />
+      <app-cart-panel (pay)="paymentVisible.set(true)" />
+    </main>
+  }
+</div>
+
+<app-payment-dialog [(visible)]="paymentVisible" />
