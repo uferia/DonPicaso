@@ -79,3 +79,13 @@
 .enter-button {
   width: 100%;
 }
+
+@media (max-width: 400px) {
+  .panel {
+    padding: 1.5rem 1rem;
+  }
+
+  .digits {
+    gap: 0.5rem;
+  }
+}
