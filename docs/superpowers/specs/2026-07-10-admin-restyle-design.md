@@ -26,8 +26,13 @@ brings the admin area up to the same visual standard.
   treatment rolled across all six pages, so menu management later inherits
   the pattern.
 
+- **Responsive (user-added):** the whole app must be viewable on laptop
+  and tablet (both orientations); the admin and auth pages must also work
+  on modern phones. Today the frontend contains zero media queries.
+
 Out of scope: any backend or API change, any route change, any service
-change, menu management, order history, product images.
+change, menu management, order history, product images, a phone-usable
+POS register (POS floor is tablet portrait).
 
 ## Section 1 — Admin shell & shared plumbing
 
@@ -93,6 +98,37 @@ One canonical treatment across all three create/edit pages:
   (outlined) button with its own confirm dialog; it stays fully independent
   of Save, exactly as currently built.
 
+## Section 4 — Responsive design
+
+Targets: POS usable at 768px width and up (tablet portrait → laptop);
+admin and auth usable at 360px and up (modern phones). No horizontal page
+scroll at any supported width — wide content scrolls inside its own
+container.
+
+**POS (`/pos`):** keep the side-by-side catalog + checkout layout at all
+supported widths, made fluid rather than redesigned:
+
+- The checkout panel gets a narrower minimum width (~280px) below 1024px;
+  the catalog takes the remainder, and the existing auto-fill product grid
+  reflows to fewer columns on its own.
+- Topbar, search bar, and category tabs tighten padding below 1024px; the
+  category tab row scrolls horizontally if it overflows.
+- The payment dialog is already a modal with fluid width — verified, not
+  redesigned. No stacked/bottom-sheet cart this phase.
+
+**Admin:** built responsive as part of the restyle, not retrofitted:
+
+- Topbar wraps to two rows on narrow screens; below ~480px nav buttons
+  compress (tighter padding, keep icons + labels while they fit).
+- Each list table sits in an `overflow-x: auto` wrapper inside its card,
+  so phones scroll the table horizontally instead of breaking the page.
+- Page container padding steps down at tablet and phone widths; form cards
+  go full-width with reduced padding below ~480px.
+
+**Auth (login, staff PIN, device setup):** already near-fluid
+(`min(…, 90vw)` cards); verify at 360px and fix any overflow — notably the
+PIN digit grid and card paddings.
+
 ## Testing
 
 - Frontend-only: zero backend, route, or service changes.
@@ -108,6 +144,10 @@ One canonical treatment across all three create/edit pages:
   `provideRouter([])`, so tested navigations follow the established
   `void navigateByUrl` pattern; the single pre-existing NG04002 baseline
   noise line (staff-login.spec.ts) remains accepted.
+- Responsive behavior is CSS-only and jsdom cannot measure layout, so it
+  is verified with browser screenshots (Playwright) at 1366, 1024, 768,
+  and 390px widths across POS, admin list/form, and auth pages as part of
+  the implementation's verification step — not with unit specs.
 
 ## Error handling
 
