@@ -1,14 +1,17 @@
-<form (ngSubmit)="submit()">
-  <h1>{{ brandId() ? 'Edit Brand' : 'New Brand' }}</h1>
+<div class="admin-page">
+  <form class="admin-card admin-form-card" (ngSubmit)="submit()">
+    <div class="admin-form-header">
+      <h1>{{ brandId() ? 'Edit brand' : 'New brand' }}</h1>
+      <a routerLink="/admin/brands" class="admin-cancel-link">Cancel</a>
+    </div>
 
-  <label>
-    Name
-    <input type="text" name="name" [(ngModel)]="name" required />
-  </label>
+    <label for="name">Name</label>
+    <input pInputText id="name" type="text" name="name" [(ngModel)]="name" required />
 
-  @if (errorMessage()) {
-    <p class="error">{{ errorMessage() }}</p>
-  }
+    @if (errorMessage()) {
+      <p-message severity="error">{{ errorMessage() }}</p-message>
+    }
 
-  <button type="submit" [disabled]="isSubmitting()">Save</button>
-</form>
+    <p-button type="submit" label="Save" [loading]="isSubmitting()" [fluid]="true" />
+  </form>
+</div>

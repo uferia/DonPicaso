@@ -2,6 +2,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
+import { MessageService } from 'primeng/api';
 
 import { BrandForm } from './brand-form';
 
@@ -15,6 +16,7 @@ describe('BrandForm', () => {
         provideHttpClient(),
         provideHttpClientTesting(),
         provideRouter([]),
+        MessageService,
         {
           provide: ActivatedRoute,
           useValue: { snapshot: { paramMap: convertToParamMap(brandId ? { brandId } : {}) } },
@@ -59,5 +61,38 @@ describe('BrandForm', () => {
     expect(req.request.method).toBe('PUT');
     req.flush({ id: 'b1', name: 'Don Picaso Renamed', isActive: true, createdAtUtc: '2026-07-08T00:00:00Z' });
     await submitPromise;
+  });
+
+  it('toasts on successful save', async () => {
+    await setUp(null);
+    const fixture = TestBed.createComponent(BrandForm);
+    const messageAddSpy = vi.spyOn(TestBed.inject(MessageService), 'add');
+    fixture.detectChanges();
+
+    fixture.componentInstance['name'] = 'Don Picaso';
+    const submitPromise = fixture.componentInstance.submit();
+    httpMock.expectOne('/api/v1/brands').flush({
+      id: 'b1', name: 'Don Picaso', isActive: true, createdAtUtc: '2026-07-08T00:00:00Z',
+    });
+    await submitPromise;
+
+    expect(messageAddSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ severity: 'success', summary: 'Brand created' }),
+    );
+  });
+
+  it('shows the error inline when the save fails', async () => {
+    await setUp(null);
+    const fixture = TestBed.createComponent(BrandForm);
+    fixture.detectChanges();
+
+    fixture.componentInstance['name'] = 'Don Picaso';
+    const submitPromise = fixture.componentInstance.submit();
+    httpMock.expectOne('/api/v1/brands').flush('boom', { status: 500, statusText: 'Server Error' });
+    await submitPromise;
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('p-message')).toBeTruthy();
+    expect(fixture.nativeElement.textContent).toContain('Could not save this brand.');
   });
 });
