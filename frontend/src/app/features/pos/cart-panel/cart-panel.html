@@ -29,7 +29,7 @@
             (onClick)="cart.increment(line.product.id)"
           />
         </span>
-        <span class="line-total">{{ line.quantity * line.product.price | currency }}</span>
+        <span class="line-total">{{ line.quantity * line.product.price | currency: menu.currencyCode() : 'symbol-narrow' }}</span>
       </div>
     } @empty {
       <p class="empty-cart">Tap items to add them to the order.</p>
@@ -50,19 +50,19 @@
     </div>
     <div class="summary-row">
       <span>Sub Total</span>
-      <span>{{ cart.subtotal() | currency }}</span>
+      <span>{{ cart.subtotal() | currency: menu.currencyCode() : 'symbol-narrow' }}</span>
     </div>
     <div class="summary-row">
       <span>Discount</span>
-      <span>-{{ cart.discountAmount() | currency }}</span>
+      <span>-{{ cart.discountAmount() | currency: menu.currencyCode() : 'symbol-narrow' }}</span>
     </div>
     <div class="summary-row">
       <span>Tax</span>
-      <span>{{ cart.taxAmount() | currency }}</span>
+      <span>{{ cart.taxAmount() | currency: menu.currencyCode() : 'symbol-narrow' }}</span>
     </div>
     <div class="summary-row total-row">
       <span>Total</span>
-      <span>{{ cart.total() | currency }}</span>
+      <span>{{ cart.total() | currency: menu.currencyCode() : 'symbol-narrow' }}</span>
     </div>
   </div>
 
@@ -76,7 +76,7 @@
       (onClick)="cancelOrder()"
     />
     <p-button class="pay-button" [disabled]="cart.lines().length === 0" (onClick)="pay.emit()">
-      Pay ({{ cart.total() | currency }})
+      Pay ({{ cart.total() | currency: menu.currencyCode() : 'symbol-narrow' }})
     </p-button>
   </div>
 </aside>

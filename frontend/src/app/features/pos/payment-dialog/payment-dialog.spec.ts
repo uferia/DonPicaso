@@ -29,7 +29,7 @@ describe('PaymentDialog', () => {
         CartService,
         MessageService,
         { provide: OrderSyncService, useValue: { placeOrder: placeOrderMock } },
-        { provide: MenuService, useValue: { taxRatePercent: signal(1.5) } },
+        { provide: MenuService, useValue: { taxRatePercent: signal(1.5), currencyCode: signal('PHP') } },
         provideHttpClient(),
         provideHttpClientTesting(),
       ],

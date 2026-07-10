@@ -15,4 +15,6 @@ export interface MenuCategory {
 export interface MenuResponse {
   categories: MenuCategory[];
   taxRatePercent: number;
+  /** ISO 4217 code (e.g. 'PHP') — set by Menu:CurrencyCode in the API's config. */
+  currencyCode: string;
 }

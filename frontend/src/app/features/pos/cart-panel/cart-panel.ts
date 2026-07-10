@@ -5,6 +5,7 @@ import { ConfirmationService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { InputNumberModule } from 'primeng/inputnumber';
 
+import { MenuService } from '../../../core/menu/menu.service';
 import { CartService } from '../cart.service';
 
 @Component({
@@ -15,6 +16,7 @@ import { CartService } from '../cart.service';
 })
 export class CartPanel {
   protected readonly cart = inject(CartService);
+  protected readonly menu = inject(MenuService);
   private readonly confirmationService = inject(ConfirmationService);
 
   readonly pay = output<void>();

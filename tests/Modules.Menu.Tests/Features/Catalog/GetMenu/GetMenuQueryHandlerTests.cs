@@ -21,7 +21,7 @@ public sealed class GetMenuQueryHandlerTests
             .Options;
 
         _dbContext = new MenuDbContext(options);
-        _handler = new GetMenuQueryHandler(_dbContext, new MenuOptions(TaxRatePercent: 1.5m));
+        _handler = new GetMenuQueryHandler(_dbContext, new MenuOptions(TaxRatePercent: 1.5m, CurrencyCode: "PHP"));
     }
 
     [TestCleanup]
@@ -44,6 +44,7 @@ public sealed class GetMenuQueryHandlerTests
         var result = await _handler.HandleAsync(brandId, CancellationToken.None);
 
         result.TaxRatePercent.Should().Be(1.5m);
+        result.CurrencyCode.Should().Be("PHP");
         result.Categories.Select(c => c.Name).Should().ContainInOrder("Coffee", "Snacks");
         result.Categories[0].Products.Select(p => p.Name).Should().ContainInOrder("Caffe Latte", "Espresso");
         result.Categories[0].Products[1].Price.Should().Be(2.50m);

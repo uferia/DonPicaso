@@ -41,6 +41,9 @@ on the menu response, and every POS money display formats with it.
   - `product-catalog.html` (1: tile price)
   - `cart-panel.html` (6: line total, subtotal, discount, tax, total, Pay button)
   - `payment-dialog.html` (2: amount due, change due)
+- Discovered during implementation, a tenth spot: the Cash-tendered
+  `p-inputNumber` in `payment-dialog.html` hardcoded `currency="USD"` — it
+  becomes `[currency]="menu.currencyCode()"`.
 - `'symbol-narrow'` renders PHP as **₱** (and USD as $, EUR as €, etc.) via
   Angular's CLDR data — this is what makes any configured code display its
   proper symbol without code changes.

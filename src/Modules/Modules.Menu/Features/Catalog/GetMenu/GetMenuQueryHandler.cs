@@ -32,7 +32,7 @@ public sealed class GetMenuQueryHandler(MenuDbContext dbContext, MenuOptions opt
                     .ToList()))
             .ToList();
 
-        return new MenuResult(categoryResults, options.TaxRatePercent);
+        return new MenuResult(categoryResults, options.TaxRatePercent, options.CurrencyCode);
     }
 }
 
@@ -40,4 +40,4 @@ public sealed record MenuProductResult(Guid Id, string Name, decimal Price, stri
 
 public sealed record MenuCategoryResult(Guid Id, string Name, IReadOnlyList<MenuProductResult> Products);
 
-public sealed record MenuResult(IReadOnlyList<MenuCategoryResult> Categories, decimal TaxRatePercent);
+public sealed record MenuResult(IReadOnlyList<MenuCategoryResult> Categories, decimal TaxRatePercent, string CurrencyCode);

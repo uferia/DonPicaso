@@ -17,6 +17,7 @@ const sampleMenu: MenuResponse = {
     },
   ],
   taxRatePercent: 1.5,
+  currencyCode: 'PHP',
 };
 
 describe('PosShell', () => {

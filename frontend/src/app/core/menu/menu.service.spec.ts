@@ -14,6 +14,7 @@ const sampleMenu: MenuResponse = {
     },
   ],
   taxRatePercent: 1.5,
+  currencyCode: 'PHP',
 };
 
 describe('MenuService', () => {
@@ -38,8 +39,21 @@ describe('MenuService', () => {
 
     expect(service.source()).toBe('network');
     expect(service.taxRatePercent()).toBe(1.5);
+    expect(service.currencyCode()).toBe('PHP');
     expect(service.categories()).toEqual(sampleMenu.categories);
     expect(JSON.parse(localStorage.getItem(MENU_CACHE_KEY)!)).toEqual(sampleMenu);
+  });
+
+  it('falls back to PHP when a stale cached payload has no currency code', async () => {
+    const staleCache = { categories: sampleMenu.categories, taxRatePercent: 1.5 };
+    localStorage.setItem(MENU_CACHE_KEY, JSON.stringify(staleCache));
+
+    const loadPromise = service.loadMenu();
+    httpMock.expectOne('/api/v1/menu').error(new ProgressEvent('offline'));
+    await loadPromise;
+
+    expect(service.source()).toBe('cache');
+    expect(service.currencyCode()).toBe('PHP');
   });
 
   it('falls back to the cached menu when the network fails', async () => {

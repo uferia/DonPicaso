@@ -9,7 +9,7 @@
   <div class="payment-body">
     <div class="amount-due">
       <span>Amount due</span>
-      <strong>{{ cart.total() | currency }}</strong>
+      <strong>{{ cart.total() | currency: menu.currencyCode() : 'symbol-narrow' }}</strong>
     </div>
 
     <p-selectbutton
@@ -29,7 +29,7 @@
           inputId="tendered"
           name="tendered"
           mode="currency"
-          currency="USD"
+          [currency]="menu.currencyCode()"
           [min]="0"
           [ngModel]="cashTendered()"
           (ngModelChange)="cashTendered.set($event)"
@@ -37,7 +37,7 @@
         @if (changeDue() !== null) {
           <div class="change-due" [class.negative]="changeDue()! < 0">
             <span>Change due</span>
-            <strong>{{ changeDue() | currency }}</strong>
+            <strong>{{ changeDue() | currency: menu.currencyCode() : 'symbol-narrow' }}</strong>
           </div>
         }
       </div>

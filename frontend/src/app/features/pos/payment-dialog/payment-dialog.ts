@@ -28,7 +28,7 @@ import { CartService, roundMoney } from '../cart.service';
 })
 export class PaymentDialog {
   protected readonly cart = inject(CartService);
-  private readonly menu = inject(MenuService);
+  protected readonly menu = inject(MenuService);
   private readonly authService = inject(AuthService);
   private readonly orderSync = inject(OrderSyncService);
   private readonly messageService = inject(MessageService);

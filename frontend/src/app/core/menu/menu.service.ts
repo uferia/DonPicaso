@@ -20,10 +20,12 @@ export class MenuService {
 
   private readonly _categories = signal<MenuCategory[]>([]);
   private readonly _taxRatePercent = signal(0);
+  private readonly _currencyCode = signal('PHP');
   private readonly _source = signal<MenuSource>('unavailable');
 
   readonly categories = this._categories.asReadonly();
   readonly taxRatePercent = this._taxRatePercent.asReadonly();
+  readonly currencyCode = this._currencyCode.asReadonly();
   readonly source = this._source.asReadonly();
 
   async loadMenu(): Promise<void> {
@@ -58,6 +60,8 @@ export class MenuService {
   private apply(menu: MenuResponse, source: MenuSource): void {
     this._categories.set(menu.categories);
     this._taxRatePercent.set(menu.taxRatePercent);
+    // Stale caches written before currency support have no currencyCode.
+    this._currencyCode.set(menu.currencyCode ?? 'PHP');
     this._source.set(source);
   }
 }

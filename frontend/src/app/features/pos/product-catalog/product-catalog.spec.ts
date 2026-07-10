@@ -32,7 +32,7 @@ describe('ProductCatalog', () => {
       imports: [ProductCatalog],
       providers: [
         CartService,
-        { provide: MenuService, useValue: { categories: signal(categories) } },
+        { provide: MenuService, useValue: { categories: signal(categories), currencyCode: signal('PHP') } },
         provideHttpClient(),
         provideHttpClientTesting(),
       ],
@@ -77,6 +77,13 @@ describe('ProductCatalog', () => {
     const tiles = fixture.nativeElement.querySelectorAll('.product-tile');
     expect(tiles.length).toBe(1);
     expect(fixture.nativeElement.textContent).toContain('Caffe Latte');
+  });
+
+  it('renders prices in the configured currency', () => {
+    const fixture = TestBed.createComponent(ProductCatalog);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('.tile-price')!.textContent).toContain('₱2.50');
   });
 
   it('adds the product to the cart when a tile is tapped', () => {

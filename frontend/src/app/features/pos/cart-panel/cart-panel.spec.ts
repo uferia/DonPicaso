@@ -20,7 +20,7 @@ describe('CartPanel', () => {
       providers: [
         CartService,
         ConfirmationService,
-        { provide: MenuService, useValue: { taxRatePercent: signal(1.5) } },
+        { provide: MenuService, useValue: { taxRatePercent: signal(1.5), currencyCode: signal('PHP') } },
         provideHttpClient(),
         provideHttpClientTesting(),
       ],
@@ -39,7 +39,7 @@ describe('CartPanel', () => {
 
     expect(fixture.nativeElement.textContent).toContain('Espresso');
     expect(fixture.nativeElement.querySelector('.line-quantity')!.textContent).toContain('2');
-    expect(fixture.nativeElement.textContent).toContain('$5.00');
+    expect(fixture.nativeElement.textContent).toContain('₱5.00');
   });
 
   it('disables Pay when the cart is empty and emits pay when pressed with items', () => {

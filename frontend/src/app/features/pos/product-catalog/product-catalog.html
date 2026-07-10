@@ -20,7 +20,7 @@
           <span class="tile-placeholder">{{ initials(product.name) }}</span>
         }
         <span class="tile-name">{{ product.name }}</span>
-        <span class="tile-price">{{ product.price | currency }}</span>
+        <span class="tile-price">{{ product.price | currency: menu.currencyCode() : 'symbol-narrow' }}</span>
       </button>
     } @empty {
       <p class="no-results">No items match your search.</p>
