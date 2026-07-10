@@ -1,29 +1,80 @@
-<h1>Users</h1>
-<a [routerLink]="['/admin/branches', branchId, 'users', 'new']" [queryParams]="{ brandId: brandIdQueryParam }">New User</a>
+<div class="admin-page">
+  <div class="admin-page-header">
+    <h1>Users</h1>
+    <p-button
+      label="New user"
+      icon="pi pi-plus"
+      [routerLink]="['/admin/branches', branchId, 'users', 'new']"
+      [queryParams]="{ brandId: brandIdQueryParam }"
+    />
+  </div>
 
-<table>
-  <thead>
-    <tr>
-      <th>Name</th>
-      <th>Role</th>
-      <th>Status</th>
-      <th></th>
-    </tr>
-  </thead>
-  <tbody>
-    @for (user of users(); track user.id) {
-      <tr>
-        <td>
-          <a [routerLink]="['/admin/branches', branchId, 'users', user.id]" [queryParams]="{ brandId: brandIdQueryParam }">
-            {{ user.displayName }}
-          </a>
-        </td>
-        <td>{{ user.role }}</td>
-        <td>{{ user.isActive ? 'Active' : 'Deactivated' }}</td>
-        <td>
-          <button (click)="toggleActive(user)">{{ user.isActive ? 'Deactivate' : 'Reactivate' }}</button>
-        </td>
-      </tr>
-    }
-  </tbody>
-</table>
+  @if (loadError()) {
+    <p-message severity="error">
+      Couldn't load users.
+      <button type="button" class="admin-retry-link" (click)="load()">Retry</button>
+    </p-message>
+  } @else {
+    <div class="admin-card">
+      <div class="admin-toolbar">
+        <i class="pi pi-search"></i>
+        <input
+          pInputText
+          type="text"
+          name="search"
+          placeholder="Search users"
+          [ngModel]="search()"
+          (ngModelChange)="search.set($event)"
+        />
+      </div>
+
+      <div class="admin-table-scroll">
+        <p-table [value]="filteredUsers()" [loading]="isLoading()" dataKey="id">
+          <ng-template #header>
+            <tr>
+              <th pSortableColumn="displayName">Name <p-sortIcon field="displayName" /></th>
+              <th pSortableColumn="role">Role <p-sortIcon field="role" /></th>
+              <th>Status</th>
+              <th></th>
+            </tr>
+          </ng-template>
+          <ng-template #body let-user>
+            <tr>
+              <td>
+                <a
+                  [routerLink]="['/admin/branches', branchId, 'users', user.id]"
+                  [queryParams]="{ brandId: brandIdQueryParam }"
+                >
+                  {{ user.displayName }}
+                </a>
+              </td>
+              <td>{{ user.role }}</td>
+              <td>
+                <p-tag
+                  [value]="user.isActive ? 'Active' : 'Inactive'"
+                  [severity]="user.isActive ? 'success' : 'secondary'"
+                />
+              </td>
+              <td class="admin-row-actions">
+                <p-button
+                  [label]="user.isActive ? 'Deactivate' : 'Reactivate'"
+                  [severity]="user.isActive ? 'danger' : 'secondary'"
+                  text
+                  size="small"
+                  (onClick)="confirmToggle(user)"
+                />
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template #emptymessage>
+            <tr>
+              <td colspan="4" class="admin-empty-state">
+                {{ search() ? 'No users match your search.' : 'No users yet — create the first one.' }}
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    </div>
+  }
+</div>
