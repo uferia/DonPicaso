@@ -2,6 +2,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
+import { MessageService } from 'primeng/api';
 
 import { BranchForm } from './branch-form';
 
@@ -15,6 +16,7 @@ describe('BranchForm', () => {
         provideHttpClient(),
         provideHttpClientTesting(),
         provideRouter([]),
+        MessageService,
         {
           provide: ActivatedRoute,
           useValue: { snapshot: { paramMap: convertToParamMap(branchId ? { brandId: 'b1', branchId } : { brandId: 'b1' }) } },
@@ -59,5 +61,23 @@ describe('BranchForm', () => {
     expect(req.request.method).toBe('PUT');
     req.flush({ id: 'br1', brandId: 'b1', name: 'Uptown', isActive: true, createdAtUtc: '2026-07-08T00:00:00Z' });
     await submitPromise;
+  });
+
+  it('toasts on successful save', async () => {
+    await setUp(null);
+    const fixture = TestBed.createComponent(BranchForm);
+    const messageAddSpy = vi.spyOn(TestBed.inject(MessageService), 'add');
+    fixture.detectChanges();
+
+    fixture.componentInstance['name'] = 'Downtown';
+    const submitPromise = fixture.componentInstance.submit();
+    httpMock.expectOne('/api/v1/brands/b1/branches').flush({
+      id: 'br1', brandId: 'b1', name: 'Downtown', isActive: true, createdAtUtc: '2026-07-08T00:00:00Z',
+    });
+    await submitPromise;
+
+    expect(messageAddSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ severity: 'success', summary: 'Branch created' }),
+    );
   });
 });

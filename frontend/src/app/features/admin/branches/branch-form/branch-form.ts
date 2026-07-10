@@ -1,17 +1,22 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { MessageService } from 'primeng/api';
+import { ButtonModule } from 'primeng/button';
+import { InputTextModule } from 'primeng/inputtext';
+import { MessageModule } from 'primeng/message';
 
 import { BranchesService } from '../../../../core/admin/branches.service';
 
 @Component({
   selector: 'app-branch-form',
-  imports: [FormsModule],
+  imports: [FormsModule, RouterLink, ButtonModule, InputTextModule, MessageModule],
   templateUrl: './branch-form.html',
   styleUrl: './branch-form.scss',
 })
 export class BranchForm implements OnInit {
   private readonly branchesService = inject(BranchesService);
+  private readonly messageService = inject(MessageService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
 
@@ -43,6 +48,10 @@ export class BranchForm implements OnInit {
       } else {
         await this.branchesService.create(this.brandId, this.name);
       }
+      this.messageService.add({
+        severity: 'success',
+        summary: branchId ? 'Branch updated' : 'Branch created',
+      });
       await this.router.navigateByUrl(`/admin/brands/${this.brandId}/branches`);
     } catch {
       this.errorMessage.set('Could not save this branch.');
