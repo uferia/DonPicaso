@@ -3,8 +3,8 @@
     <div class="admin-form-header">
       <h1>{{ userId() ? 'Edit user' : 'New user' }}</h1>
       <a
-        [routerLink]="['/admin/branches', branchId, 'users']"
-        [queryParams]="{ brandId: brandId || null }"
+        [routerLink]="['/admin/branches', returnBranchId, 'users']"
+        [queryParams]="{ brandId: returnBrandId }"
         class="admin-cancel-link"
       >
         Cancel

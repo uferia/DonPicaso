@@ -134,4 +134,23 @@ describe('UserForm', () => {
     });
     await fixture.whenStable();
   });
+
+  it('keeps Cancel pointing at the origin branch even after the form fields are edited', async () => {
+    await setUp('u1');
+    const fixture = TestBed.createComponent(UserForm);
+    fixture.detectChanges();
+    httpMock.expectOne('/api/v1/users/u1').flush({
+      id: 'u1', email: null, displayName: 'Staff Member', role: Role.Staff,
+      brandId: 'b1', branchId: 'br1', isActive: true, createdAtUtc: '2026-07-08T00:00:00Z',
+    });
+    await fixture.whenStable();
+
+    fixture.componentInstance['branchId'] = 'someone-elses-branch';
+    fixture.componentInstance['brandId'] = 'someone-elses-brand';
+    fixture.detectChanges();
+
+    const cancel = fixture.nativeElement.querySelector('.admin-cancel-link') as HTMLAnchorElement;
+    expect(cancel.getAttribute('href')).toContain('/admin/branches/br1/users');
+    expect(cancel.getAttribute('href')).toContain('brandId=b1');
+  });
 });

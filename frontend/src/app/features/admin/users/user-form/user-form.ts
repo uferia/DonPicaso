@@ -24,7 +24,11 @@ export class UserForm implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
 
-  private readonly returnBranchId = this.route.snapshot.paramMap.get('branchId')!;
+  // Where Cancel and post-save navigation return to. Captured from the
+  // route once: the ngModel-bound brandId/branchId fields below are
+  // editable, so navigating by them would follow the edited values.
+  protected readonly returnBranchId = this.route.snapshot.paramMap.get('branchId')!;
+  protected readonly returnBrandId = this.route.snapshot.queryParamMap.get('brandId');
 
   protected readonly Role = Role;
   protected readonly userId = signal<string | null>(null);
