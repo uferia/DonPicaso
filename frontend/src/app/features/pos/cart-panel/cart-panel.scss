@@ -65,6 +65,16 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+
+    // PrimeNG's input-number defaults to a fixed-width inner input that
+    // overflows the panel at narrow (tablet-portrait) widths.
+    p-inputnumber {
+      max-width: 110px;
+
+      ::ng-deep input {
+        width: 100%;
+      }
+    }
   }
 
   .total-row {
