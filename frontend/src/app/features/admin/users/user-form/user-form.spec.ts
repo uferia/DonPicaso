@@ -2,6 +2,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
+import { Confirmation, ConfirmationService, MessageService } from 'primeng/api';
 
 import { Role } from '../../../../core/auth/auth.models';
 import { UserForm } from './user-form';
@@ -16,6 +17,8 @@ describe('UserForm', () => {
         provideHttpClient(),
         provideHttpClientTesting(),
         provideRouter([]),
+        MessageService,
+        ConfirmationService,
         {
           provide: ActivatedRoute,
           useValue: {
@@ -80,6 +83,7 @@ describe('UserForm', () => {
   it('resets a staff members PIN independently of the main save', async () => {
     await setUp('u1');
     const fixture = TestBed.createComponent(UserForm);
+    const messageAddSpy = vi.spyOn(TestBed.inject(MessageService), 'add');
     fixture.detectChanges();
     httpMock.expectOne('/api/v1/users/u1').flush({
       id: 'u1', email: null, displayName: 'Staff Member', role: Role.Staff,
@@ -97,6 +101,37 @@ describe('UserForm', () => {
     });
     await resetPromise;
 
-    expect(fixture.componentInstance['credentialResetMessage']()).toBe('Credential updated.');
+    expect(messageAddSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ severity: 'success', summary: 'Credential updated' }),
+    );
+  });
+
+  it('confirms before resetting a credential', async () => {
+    await setUp('u1');
+    const fixture = TestBed.createComponent(UserForm);
+    fixture.detectChanges();
+    httpMock.expectOne('/api/v1/users/u1').flush({
+      id: 'u1', email: null, displayName: 'Staff Member', role: Role.Staff,
+      brandId: 'b1', branchId: 'br1', isActive: true, createdAtUtc: '2026-07-08T00:00:00Z',
+    });
+    await fixture.whenStable();
+
+    const confirmationService = TestBed.inject(ConfirmationService);
+    let captured: Confirmation | undefined;
+    vi.spyOn(confirmationService, 'confirm').mockImplementation((confirmation: Confirmation) => {
+      captured = confirmation;
+      return confirmationService;
+    });
+
+    fixture.componentInstance['newPin'] = '5678';
+    fixture.componentInstance['confirmResetCredential']();
+    expect(captured).toBeDefined();
+
+    captured!.accept!();
+    httpMock.expectOne('/api/v1/users/u1/reset-credential').flush({
+      id: 'u1', email: null, displayName: 'Staff Member', role: Role.Staff,
+      brandId: 'b1', branchId: 'br1', isActive: true, createdAtUtc: '2026-07-08T00:00:00Z',
+    });
+    await fixture.whenStable();
   });
 });

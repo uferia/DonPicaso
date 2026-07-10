@@ -1,83 +1,114 @@
-<form (ngSubmit)="submit()">
-  <h1>{{ userId() ? 'Edit User' : 'New User' }}</h1>
+<div class="admin-page">
+  <form class="admin-card admin-form-card" (ngSubmit)="submit()">
+    <div class="admin-form-header">
+      <h1>{{ userId() ? 'Edit user' : 'New user' }}</h1>
+      <a
+        [routerLink]="['/admin/branches', branchId, 'users']"
+        [queryParams]="{ brandId: brandId || null }"
+        class="admin-cancel-link"
+      >
+        Cancel
+      </a>
+    </div>
 
-  <label>
-    Display Name
-    <input type="text" name="displayName" [(ngModel)]="displayName" required />
-  </label>
+    <label for="displayName">Display name</label>
+    <input pInputText id="displayName" type="text" name="displayName" [(ngModel)]="displayName" required />
 
-  <label>
-    Role
-    <select name="role" [(ngModel)]="role">
-      <option [value]="Role.Corporate">Corporate</option>
-      <option [value]="Role.BrandOwner">Brand Owner</option>
-      <option [value]="Role.BranchManager">Branch Manager</option>
-      <option [value]="Role.Staff">Staff</option>
-    </select>
-  </label>
+    <label for="role">Role</label>
+    <p-select
+      inputId="role"
+      name="role"
+      [(ngModel)]="role"
+      [options]="roleOptions"
+      optionLabel="label"
+      optionValue="value"
+    />
 
-  @if (role !== Role.Corporate) {
-    <label>
-      Brand Id
-      <input type="text" name="brandId" [(ngModel)]="brandId" required />
-    </label>
-  }
-
-  @if (role === Role.BranchManager || role === Role.Staff) {
-    <label>
-      Branch Id
-      <input type="text" name="branchId" [(ngModel)]="branchId" required />
-    </label>
-  }
-
-  @if (!isStaff()) {
-    <label>
-      Email
-      <input type="email" name="email" [(ngModel)]="email" required />
-    </label>
-  }
-
-  @if (!userId()) {
-    @if (isStaff()) {
-      <label>
-        PIN
-        <input type="password" name="pin" [(ngModel)]="pin" required />
-      </label>
-    } @else {
-      <label>
-        Password
-        <input type="password" name="password" [(ngModel)]="password" required />
-      </label>
-    }
-  }
-
-  @if (errorMessage()) {
-    <p class="error">{{ errorMessage() }}</p>
-  }
-
-  <button type="submit" [disabled]="isSubmitting()">Save</button>
-</form>
-
-@if (userId()) {
-  <section class="credential-reset">
-    <h2>Reset Credential</h2>
-
-    @if (isStaff()) {
-      <label>
-        New PIN
-        <input type="password" name="newPin" [(ngModel)]="newPin" />
-      </label>
-    } @else {
-      <label>
-        New Password
-        <input type="password" name="newPassword" [(ngModel)]="newPassword" />
-      </label>
+    @if (role !== Role.Corporate) {
+      <label for="brandId">Brand id</label>
+      <input pInputText id="brandId" type="text" name="brandId" [(ngModel)]="brandId" required />
     }
 
-    @if (credentialResetMessage()) {
-      <p>{{ credentialResetMessage() }}</p>
+    @if (role === Role.BranchManager || role === Role.Staff) {
+      <label for="branchId">Branch id</label>
+      <input pInputText id="branchId" type="text" name="branchId" [(ngModel)]="branchId" required />
     }
 
-    <button type="button" (click)="resetCredential()">Reset Credential</button>
-  </section>
-}
+    @if (!isStaff()) {
+      <label for="email">Email</label>
+      <input pInputText id="email" type="email" name="email" [(ngModel)]="email" required />
+    }
+
+    @if (!userId()) {
+      @if (isStaff()) {
+        <label for="pin">PIN</label>
+        <input
+          pInputText
+          id="pin"
+          type="password"
+          inputmode="numeric"
+          name="pin"
+          [(ngModel)]="pin"
+          required
+        />
+      } @else {
+        <label for="password">Password</label>
+        <p-password
+          inputId="password"
+          name="password"
+          [(ngModel)]="password"
+          [feedback]="false"
+          [toggleMask]="true"
+          [fluid]="true"
+          required
+        />
+      }
+    }
+
+    @if (errorMessage()) {
+      <p-message severity="error">{{ errorMessage() }}</p-message>
+    }
+
+    <p-button type="submit" label="Save" [loading]="isSubmitting()" [fluid]="true" />
+  </form>
+
+  @if (userId()) {
+    <section class="admin-card admin-form-card credential-reset">
+      <h2>Reset credential</h2>
+
+      @if (isStaff()) {
+        <label for="newPin">New PIN</label>
+        <input
+          pInputText
+          id="newPin"
+          type="password"
+          inputmode="numeric"
+          name="newPin"
+          [(ngModel)]="newPin"
+        />
+      } @else {
+        <label for="newPassword">New password</label>
+        <p-password
+          inputId="newPassword"
+          name="newPassword"
+          [(ngModel)]="newPassword"
+          [feedback]="false"
+          [toggleMask]="true"
+          [fluid]="true"
+        />
+      }
+
+      @if (credentialResetMessage()) {
+        <p-message severity="error">{{ credentialResetMessage() }}</p-message>
+      }
+
+      <p-button
+        type="button"
+        label="Reset credential"
+        severity="secondary"
+        [outlined]="true"
+        (onClick)="confirmResetCredential()"
+      />
+    </section>
+  }
+</div>

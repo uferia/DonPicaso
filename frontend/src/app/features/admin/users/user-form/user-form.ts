@@ -1,18 +1,26 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { Confirmation, ConfirmationService, MessageService } from 'primeng/api';
+import { ButtonModule } from 'primeng/button';
+import { InputTextModule } from 'primeng/inputtext';
+import { MessageModule } from 'primeng/message';
+import { PasswordModule } from 'primeng/password';
+import { SelectModule } from 'primeng/select';
 
 import { Role } from '../../../../core/auth/auth.models';
 import { UsersService } from '../../../../core/admin/users.service';
 
 @Component({
   selector: 'app-user-form',
-  imports: [FormsModule],
+  imports: [FormsModule, RouterLink, ButtonModule, InputTextModule, MessageModule, PasswordModule, SelectModule],
   templateUrl: './user-form.html',
   styleUrl: './user-form.scss',
 })
 export class UserForm implements OnInit {
   private readonly usersService = inject(UsersService);
+  private readonly confirmationService = inject(ConfirmationService);
+  private readonly messageService = inject(MessageService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
 
@@ -20,6 +28,13 @@ export class UserForm implements OnInit {
 
   protected readonly Role = Role;
   protected readonly userId = signal<string | null>(null);
+
+  protected readonly roleOptions = [
+    { label: 'Corporate', value: Role.Corporate },
+    { label: 'Brand owner', value: Role.BrandOwner },
+    { label: 'Branch manager', value: Role.BranchManager },
+    { label: 'Staff', value: Role.Staff },
+  ];
 
   protected displayName = '';
   protected role: Role = Role.Staff;
@@ -83,12 +98,27 @@ export class UserForm implements OnInit {
         });
       }
 
+      this.messageService.add({
+        severity: 'success',
+        summary: this.userId() ? 'User updated' : 'User created',
+      });
       await this.router.navigateByUrl(`/admin/branches/${this.returnBranchId}/users`);
     } catch {
       this.errorMessage.set('Could not save this user.');
     } finally {
       this.isSubmitting.set(false);
     }
+  }
+
+  protected confirmResetCredential(): void {
+    const confirmation: Confirmation = {
+      header: 'Reset credential',
+      message: `Reset the ${this.isStaff() ? 'PIN' : 'password'} for ${this.displayName}?`,
+      acceptButtonProps: { label: 'Reset', severity: 'danger' },
+      rejectButtonProps: { label: 'Cancel', outlined: true },
+      accept: () => void this.resetCredential(),
+    };
+    this.confirmationService.confirm(confirmation);
   }
 
   async resetCredential(): Promise<void> {
@@ -104,7 +134,7 @@ export class UserForm implements OnInit {
         newPassword: this.isStaff() ? null : this.newPassword || null,
         newPin: this.isStaff() ? this.newPin || null : null,
       });
-      this.credentialResetMessage.set('Credential updated.');
+      this.messageService.add({ severity: 'success', summary: 'Credential updated' });
       this.newPassword = '';
       this.newPin = '';
     } catch {
