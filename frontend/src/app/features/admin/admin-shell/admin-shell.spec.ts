@@ -40,9 +40,21 @@ describe('AdminShell', () => {
     const fixture = TestBed.createComponent(AdminShell);
     fixture.detectChanges();
 
-    (fixture.nativeElement.querySelector('.logout-button') as HTMLButtonElement).click();
+    (fixture.nativeElement.querySelector('.logout-button button') as HTMLButtonElement).click();
     await fixture.whenStable();
 
     expect(navigateSpy).toHaveBeenCalledWith('/login');
+  });
+
+  it('shows the current role as a tag', () => {
+    const authService = TestBed.inject(AuthService);
+    authService.currentUser.set({ userId: 'u1', role: Role.Corporate, brandId: null, branchId: null });
+
+    const fixture = TestBed.createComponent(AdminShell);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('p-tag')).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('p-toast')).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('p-confirmdialog')).toBeTruthy();
   });
 });

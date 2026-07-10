@@ -1,12 +1,26 @@
 import { Component, inject } from '@angular/core';
-import { Router, RouterLink, RouterOutlet } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { ConfirmationService, MessageService } from 'primeng/api';
+import { ButtonModule } from 'primeng/button';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { TagModule } from 'primeng/tag';
+import { ToastModule } from 'primeng/toast';
 
 import { Role } from '../../../core/auth/auth.models';
 import { AuthService } from '../../../core/auth/auth.service';
 
 @Component({
   selector: 'app-admin-shell',
-  imports: [RouterLink, RouterOutlet],
+  imports: [
+    RouterLink,
+    RouterLinkActive,
+    RouterOutlet,
+    ButtonModule,
+    ConfirmDialogModule,
+    TagModule,
+    ToastModule,
+  ],
+  providers: [MessageService, ConfirmationService],
   templateUrl: './admin-shell.html',
   styleUrl: './admin-shell.scss',
 })

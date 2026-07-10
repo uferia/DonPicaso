@@ -1,22 +1,41 @@
-<header class="admin-header">
-  <nav class="admin-nav">
-    @if (currentUser()?.role === Role.Corporate) {
-      <a routerLink="/admin/brands">Brands</a>
-    }
-    @if (currentUser()?.role === Role.BrandOwner && currentUser()?.brandId) {
-      <a [routerLink]="['/admin/brands', currentUser()!.brandId!, 'branches']">Branches</a>
-    }
-    @if (currentUser()?.role === Role.BranchManager && currentUser()?.branchId) {
-      <a [routerLink]="['/admin/branches', currentUser()!.branchId!, 'users']">Users</a>
-    }
-  </nav>
+<p-toast position="top-right" />
+<p-confirmdialog />
 
-  <div class="session-controls">
-    @if (currentUser(); as user) {
-      <span class="current-role">{{ user.role }}</span>
-    }
-    <button type="button" class="logout-button" (click)="logout()">Log out</button>
-  </div>
-</header>
+<div class="admin-layout">
+  <header class="admin-header">
+    <div class="admin-brand">
+      <span class="brand-mark"><i class="pi pi-shop"></i></span>
+      <span class="brand-name">Don Picaso Admin</span>
+    </div>
 
-<router-outlet />
+    <nav class="admin-nav">
+      @if (currentUser()?.role === Role.Corporate) {
+        <a routerLink="/admin/brands" routerLinkActive="active">Brands</a>
+      }
+      @if (currentUser()?.role === Role.BrandOwner && currentUser()?.brandId) {
+        <a [routerLink]="['/admin/brands', currentUser()!.brandId!, 'branches']" routerLinkActive="active">Branches</a>
+      }
+      @if (currentUser()?.role === Role.BranchManager && currentUser()?.branchId) {
+        <a [routerLink]="['/admin/branches', currentUser()!.branchId!, 'users']" routerLinkActive="active">Users</a>
+      }
+    </nav>
+
+    <div class="session-controls">
+      @if (currentUser(); as user) {
+        <p-tag [value]="user.role" severity="secondary" />
+      }
+      <p-button
+        class="logout-button"
+        label="Log out"
+        icon="pi pi-sign-out"
+        severity="secondary"
+        text
+        (onClick)="logout()"
+      />
+    </div>
+  </header>
+
+  <main class="admin-content">
+    <router-outlet />
+  </main>
+</div>

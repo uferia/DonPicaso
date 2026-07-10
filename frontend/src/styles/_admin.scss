@@ -1,0 +1,119 @@
+// Shared layout classes for the /admin area. Global on purpose: Angular's
+// emulated encapsulation would force six copies if these lived in
+// component stylesheets.
+
+.admin-page {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 1.5rem;
+
+  @media (max-width: 640px) {
+    padding: 1rem 0.75rem;
+  }
+}
+
+.admin-page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+
+  h1 {
+    margin: 0;
+    font-size: 1.4rem;
+  }
+}
+
+.admin-card {
+  background: #fff;
+  border: 1px solid var(--p-surface-200);
+  border-radius: 10px;
+  padding: 1rem;
+
+  @media (max-width: 480px) {
+    padding: 0.75rem;
+  }
+}
+
+.admin-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+
+  i {
+    color: var(--p-surface-500);
+  }
+
+  input {
+    flex: 1;
+    max-width: 320px;
+  }
+}
+
+.admin-table-scroll {
+  overflow-x: auto;
+
+  table {
+    min-width: 480px;
+  }
+}
+
+.admin-empty-state {
+  text-align: center;
+  color: var(--p-surface-500);
+  padding: 2rem 1rem;
+}
+
+.admin-row-actions {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.admin-form-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-width: 560px;
+  margin: 0 auto;
+
+  label {
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
+}
+
+.admin-form-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+
+  h1 {
+    margin: 0;
+    font-size: 1.4rem;
+  }
+}
+
+.admin-cancel-link {
+  color: var(--p-surface-500);
+  text-decoration: none;
+
+  &:hover {
+    color: var(--p-surface-700);
+    text-decoration: underline;
+  }
+}
+
+.admin-retry-link {
+  background: none;
+  border: none;
+  padding: 0;
+  margin-left: 0.5rem;
+  color: var(--p-primary-600);
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
