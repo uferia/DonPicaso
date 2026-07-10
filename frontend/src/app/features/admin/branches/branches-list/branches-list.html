@@ -1,24 +1,77 @@
-<h1>Branches</h1>
-<a [routerLink]="['/admin/brands', brandId, 'branches', 'new']">New Branch</a>
+<div class="admin-page">
+  <div class="admin-page-header">
+    <h1>Branches</h1>
+    <p-button label="New branch" icon="pi pi-plus" [routerLink]="['/admin/brands', brandId, 'branches', 'new']" />
+  </div>
 
-<table>
-  <thead>
-    <tr>
-      <th>Name</th>
-      <th>Status</th>
-      <th></th>
-    </tr>
-  </thead>
-  <tbody>
-    @for (branch of branches(); track branch.id) {
-      <tr>
-        <td><a [routerLink]="['/admin/brands', brandId, 'branches', branch.id]">{{ branch.name }}</a></td>
-        <td>{{ branch.isActive ? 'Active' : 'Deactivated' }}</td>
-        <td>
-          <button (click)="toggleActive(branch)">{{ branch.isActive ? 'Deactivate' : 'Reactivate' }}</button>
-          <a [routerLink]="['/admin/branches', branch.id, 'users']" [queryParams]="{ brandId: branch.brandId }">Users</a>
-        </td>
-      </tr>
-    }
-  </tbody>
-</table>
+  @if (loadError()) {
+    <p-message severity="error">
+      Couldn't load branches.
+      <button type="button" class="admin-retry-link" (click)="load()">Retry</button>
+    </p-message>
+  } @else {
+    <div class="admin-card">
+      <div class="admin-toolbar">
+        <i class="pi pi-search"></i>
+        <input
+          pInputText
+          type="text"
+          name="search"
+          placeholder="Search branches"
+          [ngModel]="search()"
+          (ngModelChange)="search.set($event)"
+        />
+      </div>
+
+      <div class="admin-table-scroll">
+        <p-table [value]="filteredBranches()" [loading]="isLoading()" dataKey="id">
+          <ng-template #header>
+            <tr>
+              <th pSortableColumn="name">Name <p-sortIcon field="name" /></th>
+              <th>Status</th>
+              <th></th>
+            </tr>
+          </ng-template>
+          <ng-template #body let-branch>
+            <tr>
+              <td>
+                <a [routerLink]="['/admin/brands', brandId, 'branches', branch.id]">{{ branch.name }}</a>
+              </td>
+              <td>
+                <p-tag
+                  [value]="branch.isActive ? 'Active' : 'Inactive'"
+                  [severity]="branch.isActive ? 'success' : 'secondary'"
+                />
+              </td>
+              <td class="admin-row-actions">
+                <p-button
+                  label="Users"
+                  icon="pi pi-users"
+                  severity="secondary"
+                  text
+                  size="small"
+                  [routerLink]="['/admin/branches', branch.id, 'users']"
+                  [queryParams]="{ brandId: branch.brandId }"
+                />
+                <p-button
+                  [label]="branch.isActive ? 'Deactivate' : 'Reactivate'"
+                  [severity]="branch.isActive ? 'danger' : 'secondary'"
+                  text
+                  size="small"
+                  (onClick)="confirmToggle(branch)"
+                />
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template #emptymessage>
+            <tr>
+              <td colspan="3" class="admin-empty-state">
+                {{ search() ? 'No branches match your search.' : 'No branches yet — create the first one.' }}
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    </div>
+  }
+</div>
