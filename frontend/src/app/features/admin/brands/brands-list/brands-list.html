@@ -1,23 +1,66 @@
-<h1>Brands</h1>
-<a routerLink="/admin/brands/new">New Brand</a>
+<div class="admin-page">
+  <div class="admin-page-header">
+    <h1>Brands</h1>
+    <p-button label="New brand" icon="pi pi-plus" routerLink="/admin/brands/new" />
+  </div>
 
-<table>
-  <thead>
-    <tr>
-      <th>Name</th>
-      <th>Status</th>
-      <th></th>
-    </tr>
-  </thead>
-  <tbody>
-    @for (brand of brands(); track brand.id) {
-      <tr>
-        <td><a [routerLink]="['/admin/brands', brand.id]">{{ brand.name }}</a></td>
-        <td>{{ brand.isActive ? 'Active' : 'Deactivated' }}</td>
-        <td>
-          <button (click)="toggleActive(brand)">{{ brand.isActive ? 'Deactivate' : 'Reactivate' }}</button>
-        </td>
-      </tr>
-    }
-  </tbody>
-</table>
+  @if (loadError()) {
+    <p-message severity="error">
+      Couldn't load brands.
+      <button type="button" class="admin-retry-link" (click)="load()">Retry</button>
+    </p-message>
+  } @else {
+    <div class="admin-card">
+      <div class="admin-toolbar">
+        <i class="pi pi-search"></i>
+        <input
+          pInputText
+          type="text"
+          name="search"
+          placeholder="Search brands"
+          [ngModel]="search()"
+          (ngModelChange)="search.set($event)"
+        />
+      </div>
+
+      <div class="admin-table-scroll">
+        <p-table [value]="filteredBrands()" [loading]="isLoading()" dataKey="id">
+          <ng-template #header>
+            <tr>
+              <th pSortableColumn="name">Name <p-sortIcon field="name" /></th>
+              <th>Status</th>
+              <th></th>
+            </tr>
+          </ng-template>
+          <ng-template #body let-brand>
+            <tr>
+              <td><a [routerLink]="['/admin/brands', brand.id]">{{ brand.name }}</a></td>
+              <td>
+                <p-tag
+                  [value]="brand.isActive ? 'Active' : 'Inactive'"
+                  [severity]="brand.isActive ? 'success' : 'secondary'"
+                />
+              </td>
+              <td class="admin-row-actions">
+                <p-button
+                  [label]="brand.isActive ? 'Deactivate' : 'Reactivate'"
+                  [severity]="brand.isActive ? 'danger' : 'secondary'"
+                  text
+                  size="small"
+                  (onClick)="confirmToggle(brand)"
+                />
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template #emptymessage>
+            <tr>
+              <td colspan="3" class="admin-empty-state">
+                {{ search() ? 'No brands match your search.' : 'No brands yet — create the first one.' }}
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    </div>
+  }
+</div>
